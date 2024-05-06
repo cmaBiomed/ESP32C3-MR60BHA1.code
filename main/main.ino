@@ -1,9 +1,13 @@
+
+
 /*
 @Autor Carlos Madrid Espinosa
 */
 
 #include "Arduino.h"
 #include "60ghzbreathheart.h"
+#include <ArduinoJson.h>
+#include <ArduinoJson.hpp>
 #include <HardwareSerial.h>
 #include <esp_sleep.h>
 #include <WiFi.h>
@@ -32,6 +36,13 @@ BreathHeart_60GHz radar = BreathHeart_60GHz(&Sensor_Serial);
 const char *ssid = "clarc1"; // Nombre de la red
 const char *password = "robotclarc1";  // Contraseña de la red
 
+// Mqtt
+const char* mqtt_serv = ""; // ip del servidor
+const int mqtt_port = 1883; // puerto del servidor
+
+WiFiClient espClient; 
+PubSubClient client(espClient);
+
 // número de veces que hemos iniciado el sistema
 RTC_DATA_ATTR int bootCount = 0;
 
@@ -56,12 +67,16 @@ void setup() {
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    Serial.println("Concetándonos a la red");
+    Serial.println("Concetándonos a la red WiFi");
   }
   Serial.println("WiFi Conectado");
 
   // Configuración de MQTT
-  
+  Serial.println("Conectando con el Broker MQTT");
+  client.setServer(mqtt_server, mqtt_port);
+  while(!client.connected()) {
+    conecta_mqtt();
+  }
 
   // Aumentamos en 1 el número de inicios del sistema
   bootCount++;
@@ -122,6 +137,20 @@ void setup() {
   esp_deep_sleep_start();
 }
 
+// Conecta el cliente con el servidor MQTT
+void conecta_MQTT() {
+  Serial.println("Intentando reconectar con el servidor MQTT");
+  String clientId =" ESP32Client-";
+  clientId += String(random(0xffff), HEX);
+  if (client.connect(clientId.c_str())) {
+    Serial.println("Conextados al servidor MQTT");
+  }
+  else {
+    Serial.print("Conexión fallida, Código: ");
+    Serial.println(client.state());
+  }
+}
+
 // Función que nos permite detectar presencia humana 
 bool detecta_personas() {
   // tiempo de ejecución actual en milisegundos
@@ -150,14 +179,24 @@ bool detecta_personas() {
   return distancia_medida && direccion_medida;
 }
 
-// Conexíón sincrona con el robot/servidor
+
+long ultimoMsg = 0;
+// Avisa de que se ha detectado a una persona y le envía un 
+// JSON con sus datos de posición y distancia. Después espera a 
+// que se confirme que puede seguir
 bool aviso_persona_detectada() {
-  delay(2000);
+  StaticJsonDocument<80> doc;
+  char output[80];
+  long tiempo = millis();
+  doc["d"] = distancia;
+  doc["x"] = posicion[0];
+  doc["y"] = posicion[1];
+  doc["z"] = posicion[2];
+  serializeJson(doc, output);
+  client.publish("")
   return true;
-  /*
-   TODO
-  */
 }
+
 /*
 * Medimos las variables de interés en un intervalo
 * Las variables se envían al robot/servidor de forma asíncrona
