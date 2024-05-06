@@ -1,4 +1,3 @@
-
 /*
 @Autor Carlos Madrid Espinosa
 */
@@ -8,6 +7,8 @@
 #include <HardwareSerial.h>
 #include <esp_sleep.h>
 #include <WiFi.h>
+#include <PubSubClient.h>
+
 
 // Para pasar de us y ms a s
 #define FE_uS_S 1000000
@@ -26,6 +27,10 @@
 HardwareSerial Sensor_Serial(1);
 // le damos acceso al sensor a este canal
 BreathHeart_60GHz radar = BreathHeart_60GHz(&Sensor_Serial);
+
+// Wifi
+const char *ssid = "clarc1"; // Nombre de la red
+const char *password = "robotclarc1";  // Contraseña de la red
 
 // número de veces que hemos iniciado el sistema
 RTC_DATA_ATTR int bootCount = 0;
@@ -47,6 +52,17 @@ void setup() {
   while (!Sensor_Serial);
   Serial.println("Sensor Conectado");
 
+  // Configuración del WiFi: 
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.println("Concetándonos a la red");
+  }
+  Serial.println("WiFi Conectado");
+
+  // Configuración de MQTT
+  
+
   // Aumentamos en 1 el número de inicios del sistema
   bootCount++;
   Serial.println("==========================================================");
@@ -55,7 +71,6 @@ void setup() {
   Serial.println("----------------------------------------------------------");
   // Comenzamos buscando personas en rango operativo del sensor
   Serial.println("Escaneando el perímetro.");
-
   if (detecta_personas()) {
     // Detectamos a alguien y calculamos su posición
     Serial.println("Persona detectada.");
@@ -70,14 +85,20 @@ void setup() {
     Serial.print(" m, Z: ");
     Serial.print(direccion[0]);
     Serial.println(" m.");
-
     Serial.println("----------------------------------------------------------");
     // Si se detectan personas se avisa al servidor y esperamos su respuesta
+    Serial.println("Notificando al Broker");
     if (aviso_persona_detectada()) {
       Serial.println("Confirmación recibida");
       Serial.println("----------------------------------------------------------");
       // Si recibimos confirmación por parte del servidor comenzamos a medir sus variables fisiológicas
+      Serial.println("Midiendo variables:");
       mide_pulso_respiracion();
+      Serial.print("Puslo Cardíaco: ");
+      Serial.println(" ");
+      Serial.print("Frecuencia respiratoria: ");
+      Serial.println(" ");
+      Serial.println("----------------------------------------------------------");
     } else {
       // Si el servidor nos lo conforma pasamos al estado base
       Serial.println("Confirmación no recibida o denadgada");
@@ -111,7 +132,8 @@ bool detecta_personas() {
   // Contamos el tiempo y si llegamos al límite o detectamos a alguien terminamos
   while (millis() - T_Inicio < T_deteccion*FE_mS_S && !(distancia_medida && direccion_medida)) {
     // Activamos el modo de detección de personas
-    radar.HumanExis_Func();           
+    radar.HumanExis_Func();
+    // Serial.println(radar.sensor_report);
     // Medimos orientaciom
     if(radar.sensor_report == DIREVAL) {
       direccion[0] = radar.Dir_x;
@@ -130,7 +152,6 @@ bool detecta_personas() {
 
 // Conexíón sincrona con el robot/servidor
 bool aviso_persona_detectada() {
-  Serial.println("Notificando al broker");
   delay(2000);
   return true;
   /*
@@ -142,9 +163,7 @@ bool aviso_persona_detectada() {
 * Las variables se envían al robot/servidor de forma asíncrona
 */
 void mide_pulso_respiracion() {
-  Serial.println("Midiendo constantes");
   delay(2000);
-  Serial.println("------------------------------");
 }
 
 void loop() {
