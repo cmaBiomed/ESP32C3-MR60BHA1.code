@@ -4,9 +4,10 @@
 */
 
 #include "Arduino.h"
-#include <60ghzbreathheart.h>
+#include "60ghzbreathheart.h"
 #include <HardwareSerial.h>
 #include <esp_sleep.h>
+#include <WiFi.h>
 
 // Para pasar de us y ms a s
 #define FE_uS_S 1000000
@@ -126,9 +127,6 @@ bool detecta_personas() {
   }
   return distancia_medida && direccion_medida;
 }
-
-
-
 
 // Conexíón sincrona con el robot/servidor
 bool aviso_persona_detectada() {
