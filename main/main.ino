@@ -20,7 +20,7 @@
 // Número de unidades de tiempo que va a dormirse
 #define T_dormido 5
 // Segundos en los que medimos y detectamos personas respectivamente
-#define T_medida 10
+#define T_medida 20
 #define T_deteccion 20
 
 // Pines UART para el sensor
@@ -71,12 +71,14 @@ void setup() {
   }
   Serial.println("WiFi Conectado");
 
+/*
   // Configuración de MQTT
   Serial.println("Conectando con el Broker MQTT");
   client.setServer(mqtt_server, mqtt_port);
   while(!client.connected()) {
     conecta_mqtt();
   }
+*/
 
   // Aumentamos en 1 el número de inicios del sistema
   bootCount++;
@@ -109,10 +111,6 @@ void setup() {
       // Si recibimos confirmación por parte del servidor comenzamos a medir sus variables fisiológicas
       Serial.println("Midiendo variables:");
       mide_pulso_respiracion();
-      Serial.print("Puslo Cardíaco: ");
-      Serial.println(" ");
-      Serial.print("Frecuencia respiratoria: ");
-      Serial.println(" ");
       Serial.println("----------------------------------------------------------");
     } else {
       // Si el servidor nos lo conforma pasamos al estado base
@@ -185,6 +183,7 @@ long ultimoMsg = 0;
 // JSON con sus datos de posición y distancia. Después espera a 
 // que se confirme que puede seguir
 bool aviso_persona_detectada() {
+  /*
   StaticJsonDocument<80> doc;
   char output[80];
   long tiempo = millis();
@@ -194,6 +193,7 @@ bool aviso_persona_detectada() {
   doc["z"] = posicion[2];
   serializeJson(doc, output);
   client.publish("")
+  */
   return true;
 }
 
@@ -202,7 +202,58 @@ bool aviso_persona_detectada() {
 * Las variables se envían al robot/servidor de forma asíncrona
 */
 void mide_pulso_respiracion() {
-  delay(2000);
+  
+  // Tiempo en el que empezamos a medir;
+  unsigned long T_inicio = millis();
+  unsigned long T_muestra = millis();
+
+  volatile float sum_HEART_RATE = 0;
+  volatile float sum_BREATH_RATE = 0;
+  volatile int HR_points = 0;
+  volatile int BR_points = 0;
+  
+  // Si seguimos en el tiempo en el que podemos medir
+  while (millis() - T_inicio < T_medida*FE_uS_S) {
+  
+    // Cada muestra dura como máximo 3s:
+    if (millis() - T_muestra < 3*FE_uS_S ) {
+      radar.Breath_Heart();
+      if(radar.sensor_report != 0x00){
+        // Si se da un caso de fuera de los rangos lo ignoro, 
+        // aunque se podría mandar un aviso o algo
+        switch(radar.sensor_report){
+            case HEARTRATEVAL:
+              sum_HEART_RATE += radar.heart_rate;
+              HR_points++;
+              break;
+            case BREATHVAL:
+              sum_BREATH_RATE += radar.breath_rate;
+              BR_points++;
+              break;
+        }
+      }
+    } 
+    else {
+      // Si se diese el caso de no medir alguna de las dos, evitamos dividir entre 0
+      HR_points = (HR_points == 0) ? 1 : HR_points;
+      BR_points = (BR_points == 0) ? 1 : BR_points;
+
+      // mandamos las medidas por el canal serial
+      Serial.print("t: ");
+      Serial.println(T_inicio-T_muestra);
+      Serial.print("HR: ");
+      Serial.println(sum_HEART_RATE/(float)HR_points);
+      Serial.print("BR: ");
+      Serial.println(sum_BREATH_RATE/(float)BR_points);
+      // reseteamos todo:
+      sum_HEART_RATE = 0;
+      sum_BREATH_RATE = 0;
+      HR_points = 0;
+      BR_points = 0;
+      T_muestra = millis(); 
+    }
+    delay(200); // evitamos atascos
+  }
 }
 
 void loop() {
