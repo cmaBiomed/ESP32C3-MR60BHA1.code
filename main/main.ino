@@ -1,11 +1,12 @@
-
-
 /*
-@Autor Carlos Madrid Espinosa
+@author Carlos Madrid Espinosa
+@date 2024/05/10
 */
 
 #include "Arduino.h"
 #include "60ghzbreathheart.h"
+#include "radar_utils.h"
+#include "WiFi_MQTT_utils.h"
 #include <ArduinoJson.h>
 #include <ArduinoJson.hpp>
 #include <HardwareSerial.h>
@@ -33,12 +34,13 @@ HardwareSerial Sensor_Serial(1);
 BreathHeart_60GHz radar = BreathHeart_60GHz(&Sensor_Serial);
 
 // Wifi
-const char *ssid = "clarc1"; // Nombre de la red
-const char *password = "robotclarc1";  // Contraseña de la red
+const char *ssid = "Cma"; // Nombre de la red
+const char *password = "bosquimano";  // Contraseña de la red
 
 // Mqtt
-const char* mqtt_serv = ""; // ip del servidor
-const int mqtt_port = 1883; // puerto del servidor
+const char* mqtt_server = "192.168.0.164"; // ip del servidor
+const int mqtt_port = 1122; // puerto del servidor
+const char* MQTT_CLIENT_NAME = "cmaESP"; // Nombre de este dispositivo
 
 WiFiClient espClient; 
 PubSubClient client(espClient);
@@ -71,14 +73,19 @@ void setup() {
   }
   Serial.println("WiFi Conectado");
 
-/*
+
   // Configuración de MQTT
+  /*
   Serial.println("Conectando con el Broker MQTT");
   client.setServer(mqtt_server, mqtt_port);
+  client.setCallback(OnMqttReceived);
   while(!client.connected()) {
-    conecta_mqtt();
+    delay(500);
+    conecta_MQTT();
   }
-*/
+  
+  client.publish("/cmaESP32/test", "Hola, soy el ESP");
+  */
 
   // Aumentamos en 1 el número de inicios del sistema
   bootCount++;
@@ -135,12 +142,31 @@ void setup() {
   esp_deep_sleep_start();
 }
 
+/*
+String content = "";
+void OnMqttReceived(char* topic, byte* payload, unsigned int length) 
+{
+  Serial.print("Received on ");
+  Serial.print(topic);
+  Serial.print(": ");
+
+  content = "";  
+  for (size_t i = 0; i < length; i++) {
+    content.concat((char)payload[i]);
+  }
+  Serial.print(content);
+  Serial.println();
+}
+*/
+
+
 // Conecta el cliente con el servidor MQTT
+/*
 void conecta_MQTT() {
   Serial.println("Intentando reconectar con el servidor MQTT");
-  String clientId =" ESP32Client-";
-  clientId += String(random(0xffff), HEX);
-  if (client.connect(clientId.c_str())) {
+  String client_id = "esp8266-client-";
+  client_id += String(WiFi.macAddress());
+  if (client.connect(client_id.c_str())) {
     Serial.println("Conextados al servidor MQTT");
   }
   else {
@@ -148,6 +174,7 @@ void conecta_MQTT() {
     Serial.println(client.state());
   }
 }
+*/
 
 // Función que nos permite detectar presencia humana 
 bool detecta_personas() {
@@ -157,7 +184,7 @@ bool detecta_personas() {
   bool distancia_medida = false;
   bool direccion_medida = false;
   // Contamos el tiempo y si llegamos al límite o detectamos a alguien terminamos
-  while (millis() - T_Inicio < T_deteccion*FE_mS_S && !(distancia_medida && direccion_medida)) {
+  while (millis() - T_Inicio < T_deteccion*FE_mS_S && !(distancia_medida && direccion_medida)) { 
     // Activamos el modo de detección de personas
     radar.HumanExis_Func();
     // Serial.println(radar.sensor_report);
@@ -183,16 +210,15 @@ long ultimoMsg = 0;
 // JSON con sus datos de posición y distancia. Después espera a 
 // que se confirme que puede seguir
 bool aviso_persona_detectada() {
-  /*
-  StaticJsonDocument<80> doc;
+  /*StaticJsonDocument<80> doc;
   char output[80];
   long tiempo = millis();
   doc["d"] = distancia;
-  doc["x"] = posicion[0];
-  doc["y"] = posicion[1];
-  doc["z"] = posicion[2];
+  doc["x"] = direccion[0];
+  doc["y"] = direccion[1];
+  doc["z"] = direccion[2];
   serializeJson(doc, output);
-  client.publish("")
+  client.publish("/cmaESP32/test", "Hola, soy el ESP");
   */
   return true;
 }
@@ -213,10 +239,9 @@ void mide_pulso_respiracion() {
   volatile int BR_points = 0;
   
   // Si seguimos en el tiempo en el que podemos medir
-  while (millis() - T_inicio < T_medida*FE_uS_S) {
-  
+  while (millis() - T_inicio < T_medida*FE_mS_S) {
     // Cada muestra dura como máximo 3s:
-    if (millis() - T_muestra < 3*FE_uS_S ) {
+    if (millis() - T_muestra < 3*FE_mS_S) {
       radar.Breath_Heart();
       if(radar.sensor_report != 0x00){
         // Si se da un caso de fuera de los rangos lo ignoro, 

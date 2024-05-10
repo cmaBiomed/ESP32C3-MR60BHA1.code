@@ -318,11 +318,11 @@ void BreathHeart_60GHz::send_func(const unsigned char* buff, int len, bool cycli
       delay(20);
     }while(!(this->newData));
     if(cyclic || count < 1){
-      Serial.print("  Sent  ---> ");
+      // Serial.print("  Sent  ---> ");
       data_printf(buff, len);
     }
     if(count%2 == 1){
-      Serial.print("Receive <--- ");
+      // Serial.print("Receive <--- ");
       showData();
     }
     this->newData = false;
@@ -335,21 +335,21 @@ void BreathHeart_60GHz::ModeSelect_fuc(int mode){
   if (mode == 1){
     stream->write(realtime_mode_frame, mode_frame_len);
     stream->flush();
-    Serial.println("Real-time data transfer mode ON!");
+    // Serial.println("Real-time data transfer mode ON!");
   }
   else if (mode == 2){
     stream->write(sleepstatus_mode_frame, mode_frame_len);
     stream->flush();
-    Serial.println("Sleep state transfer mode ON!");
+    // Serial.println("Sleep state transfer mode ON!");
   }
-  else Serial.println("Input error, please reselect the mode - 1: indicates real-time transmission mode, 2: indicates sleep state mode.");
+  // else Serial.println("Input error, please reselect the mode - 1: indicates real-time transmission mode, 2: indicates sleep state mode.");
 }
 
 //Reset radar
 void BreathHeart_60GHz::reset_func(){
   stream->write(breath_reset_frame, reset_frame_len);
   stream->flush();
-  Serial.println("Radar reset!");
+  // Serial.println("Radar reset!");
 }
 
 //Two Byte to signed integer
@@ -364,10 +364,10 @@ void BreathHeart_60GHz::data_printf(const unsigned char* buff, int len){
   char charVal[4];
   for(int i=0; i<len; i++){
     sprintf(charVal, "%02X", buff[i]);
-    Serial.print(charVal);
-    Serial.print(' ');
+    // Serial.print(charVal);
+    // erial.print(' ');
   }
-  Serial.println();
+  // Serial.println();
 }
 
 //reset the radar values
