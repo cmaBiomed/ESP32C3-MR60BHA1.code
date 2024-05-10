@@ -3,16 +3,12 @@
 @date 2024/05/10
 */
 
-#include "60ghzbreathheart.h"
-#include <HardwareSerial.h>
-#include <esp_sleep.h>
+#ifndef _RADARUTILS_H__
+#define _RADARUTILS_H__
 
 // UART conection with the sensor
 #define RX 18 
 #define TX 19
-
-HardwareSerial Sensor_Serial(1);
-BreathHeart_60GHz radar = BreathHeart_60GHz(&Sensor_Serial);
 
 // Times for different things (in seconds)
 #define SLEEP_TIME      5  // Time that the system will sleep
@@ -23,10 +19,11 @@ BreathHeart_60GHz radar = BreathHeart_60GHz(&Sensor_Serial);
 #define uS_S 1000000 // Micro seconds to seconds
 #define mS_S 1000    // Mili seconds to seconds
 
-RTC_DATA_ATTR int bootCount = 0;
+extern float person_direction [3];
+extern float person_distance;
 
-float direction[3];
-float distance;
-
+void sensor_init();
 bool person_detec();
 void vital_sings_measure();
+
+#endif

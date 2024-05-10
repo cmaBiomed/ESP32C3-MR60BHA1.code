@@ -3,14 +3,28 @@
 @date 2024/05/10
 */
 
+#include "Arduino.h"
 #include "radar_utils.h"
+#include "60ghzbreathheart.h"
+#include <HardwareSerial.h>
+
+HardwareSerial Sensor_Serial(1);
+BreathHeart_60GHz radar = BreathHeart_60GHz(&Sensor_Serial);
+
+float person_direction [3];
+float person_distance;
+
+void sensor_init() {
+    Sensor_Serial.begin(115200, SERIAL_8N1, RX, TX);
+    while(!Sensor_Serial);
+}
 
 /*
 * @brief Function that determines wether a person is located within the vacinity of the sensor.
 * It uses the distance and direcction functionalities of the sensor, where we determine that if the sensor
 * reports both  of those values during the stablished time, then we can say that a person has been detected. 
 * This is an stimation and can fail in some scenarios. 
-* Also, the direction measure is not very reliable
+* Also, the direction measure is not very reliable.
 */
 bool person_detec() {
     unsigned long Start_Time = millis();
@@ -21,13 +35,13 @@ bool person_detec() {
         if (radar.sensor_report != 0x00) {
             switch (radar.sensor_report) {
                 case DISVAL:
-                    distance = radar.distance;
+                    person_distance = radar.distance;
                     measured_distance = true;
                     break;
                 case DIREVAL:
-                    direction[0] = radar.Dir_x;
-                    direction[1] = radar.Dir_y;
-                    direction[2] = radar.Dir_z;
+                    person_direction[0] = radar.Dir_x;
+                    person_direction[1] = radar.Dir_y;
+                    person_direction[2] = radar.Dir_z;
                     measured_direction = true;
                     break;
                 default:
@@ -78,7 +92,7 @@ void vital_sings_measure() {
             // This is temporal, while i figure out how to store the valueas untill i send them. 
             // i am goig mad with pointerless c++ help
             Serial.print("t: ");
-            Serial.println((start_time-sample_time)/mS_S);
+            Serial.println((float)(millis()-start_time)/1000);
             Serial.print("HR: ");
             Serial.println(sum_HEART_RATE/(float)heart_rate_points);
             Serial.print("BR: ");

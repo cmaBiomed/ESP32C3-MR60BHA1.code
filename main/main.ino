@@ -3,16 +3,19 @@
 @date 2024/04/19
 */
 
-#include "Arduino.h"
+// #include "Arduino.h"
 #include "radar_utils.h"
 #include "WiFi_MQTT_utils.h"
 
+#include <esp_sleep.h>
 #include <ArduinoJson.h>
 #include <ArduinoJson.hpp>
 #include <WiFi.h>
 #include <PubSubClient.h>
 
-const char *ssid = "clark1";
+RTC_DATA_ATTR int bootCount = 0;
+
+const char *ssid = "clarc1";
 const char *password = "robotclarc1";
 
 const char* mqtt_server = "192.168.0.164";
@@ -29,9 +32,7 @@ void setup() {
   while (!Serial);
   Serial.println("Canal de Comunicación establecido");
   // Conexión con el sensor
-  Sensor_Serial.begin(115200, SERIAL_8N1, RX, TX);
-  delay(1000);
-  while (!Sensor_Serial);
+  sensor_init();
   Serial.println("Sensor Conectado");
 
   // Configuración del WiFi: 
@@ -68,15 +69,15 @@ void setup() {
     // Detectamos a alguien y calculamos su posición
     Serial.println("Persona detectada.");
     Serial.print("A ");
-    Serial.print(distance);
+    Serial.print(person_distance);
     Serial.println(" m.");
     Serial.print("En posición relativa:");
     Serial.print("X: ");
-    Serial.print(direction[0]);
+    Serial.print(person_direction[0]);
     Serial.print(" m, Y: ");
-    Serial.print(direction[1]);
+    Serial.print(person_direction[1]);
     Serial.print(" m, Z: ");
-    Serial.print(direction[2]);
+    Serial.print(person_direction[2]);
     Serial.println(" m.");
     Serial.println("----------------------------------------------------------");
     // Si se detectan personas se avisa al servidor y esperamos su respuesta
@@ -107,7 +108,6 @@ void setup() {
 
   // Expulsamos todo de los canales seriales y empezamos el sueño profundo
   Serial.flush();
-  Sensor_Serial.flush();
   esp_deep_sleep_start();
 }
 
@@ -145,21 +145,7 @@ void conecta_MQTT() {
 }
 */
 
-long ultimoMsg = 0;
-// Avisa de que se ha detectado a una persona y le envía un 
-// JSON con sus datos de posición y distancia. Después espera a 
-// que se confirme que puede seguir
 bool aviso_persona_detectada() {
-  /*StaticJsonDocument<80> doc;
-  char output[80];
-  long tiempo = millis();
-  doc["d"] = distancia;
-  doc["x"] = direccion[0];
-  doc["y"] = direccion[1];
-  doc["z"] = direccion[2];
-  serializeJson(doc, output);
-  client.publish("/cmaESP32/test", "Hola, soy el ESP");
-  */
   return true;
 }
 
