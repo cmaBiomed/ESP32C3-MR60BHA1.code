@@ -1,12 +1,13 @@
 /*
 @author Carlos Madrid Espinosa
-@date 2024/05/10
+@date 2024/04/19
 */
 
 #include "Arduino.h"
 #include "60ghzbreathheart.h"
 #include "radar_utils.h"
 #include "WiFi_MQTT_utils.h"
+
 #include <ArduinoJson.h>
 #include <ArduinoJson.hpp>
 #include <HardwareSerial.h>
@@ -14,43 +15,19 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 
+const char *ssid = "Cma";
+const char *password = "bosquimano";
 
-// Para pasar de us y ms a s
-#define FE_uS_S 1000000
-#define FE_mS_S 1000
-// Número de unidades de tiempo que va a dormirse
-#define T_dormido 5
-// Segundos en los que medimos y detectamos personas respectivamente
-#define T_medida 20
-#define T_deteccion 20
-
-// Pines UART para el sensor
-#define Rx 18
-#define Tx 19
-
-// Comunicación serial con el sensor
-HardwareSerial Sensor_Serial(1);
-// le damos acceso al sensor a este canal
-BreathHeart_60GHz radar = BreathHeart_60GHz(&Sensor_Serial);
-
-// Wifi
-const char *ssid = "Cma"; // Nombre de la red
-const char *password = "bosquimano";  // Contraseña de la red
-
-// Mqtt
-const char* mqtt_server = "192.168.0.164"; // ip del servidor
-const int mqtt_port = 1122; // puerto del servidor
-const char* MQTT_CLIENT_NAME = "cmaESP"; // Nombre de este dispositivo
+const char* mqtt_server = "192.168.0.164";
+const int mqtt_port = 1122;
+const char* MQTT_CLIENT_NAME = "cmaESP";
 
 WiFiClient espClient; 
 PubSubClient client(espClient);
 
-// número de veces que hemos iniciado el sistema
 RTC_DATA_ATTR int bootCount = 0;
 
-// Orientación de la persona detectada relativa al sensor
 float* direccion = new float[3];
-// Distancia a la persona detectada
 float distancia; 
 
 void setup() {
