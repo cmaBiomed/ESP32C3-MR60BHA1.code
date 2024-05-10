@@ -4,19 +4,16 @@
 */
 
 #include "Arduino.h"
-#include "60ghzbreathheart.h"
 #include "radar_utils.h"
 #include "WiFi_MQTT_utils.h"
 
 #include <ArduinoJson.h>
 #include <ArduinoJson.hpp>
-#include <HardwareSerial.h>
-#include <esp_sleep.h>
 #include <WiFi.h>
 #include <PubSubClient.h>
 
-const char *ssid = "Cma";
-const char *password = "bosquimano";
+const char *ssid = "clark1";
+const char *password = "robotclarc1";
 
 const char* mqtt_server = "192.168.0.164";
 const int mqtt_port = 1122;
@@ -25,11 +22,6 @@ const char* MQTT_CLIENT_NAME = "cmaESP";
 WiFiClient espClient; 
 PubSubClient client(espClient);
 
-RTC_DATA_ATTR int bootCount = 0;
-
-float* direccion = new float[3];
-float distancia; 
-
 void setup() {
   // Conexión con el monitor serial
   Serial.begin(115200);
@@ -37,7 +29,7 @@ void setup() {
   while (!Serial);
   Serial.println("Canal de Comunicación establecido");
   // Conexión con el sensor
-  Sensor_Serial.begin(115200, SERIAL_8N1, Rx, Tx);
+  Sensor_Serial.begin(115200, SERIAL_8N1, RX, TX);
   delay(1000);
   while (!Sensor_Serial);
   Serial.println("Sensor Conectado");
@@ -72,19 +64,19 @@ void setup() {
   Serial.println("----------------------------------------------------------");
   // Comenzamos buscando personas en rango operativo del sensor
   Serial.println("Escaneando el perímetro.");
-  if (detecta_personas()) {
+  if (person_detec()) {
     // Detectamos a alguien y calculamos su posición
     Serial.println("Persona detectada.");
     Serial.print("A ");
-    Serial.print(distancia);
+    Serial.print(distance);
     Serial.println(" m.");
     Serial.print("En posición relativa:");
     Serial.print("X: ");
-    Serial.print(direccion[0]);
+    Serial.print(direction[0]);
     Serial.print(" m, Y: ");
-    Serial.print(direccion[0]);
+    Serial.print(direction[1]);
     Serial.print(" m, Z: ");
-    Serial.print(direccion[0]);
+    Serial.print(direction[2]);
     Serial.println(" m.");
     Serial.println("----------------------------------------------------------");
     // Si se detectan personas se avisa al servidor y esperamos su respuesta
@@ -94,7 +86,7 @@ void setup() {
       Serial.println("----------------------------------------------------------");
       // Si recibimos confirmación por parte del servidor comenzamos a medir sus variables fisiológicas
       Serial.println("Midiendo variables:");
-      mide_pulso_respiracion();
+      vital_sings_measure();
       Serial.println("----------------------------------------------------------");
     } else {
       // Si el servidor nos lo conforma pasamos al estado base
@@ -108,9 +100,9 @@ void setup() {
   }
   // Si no podemos hacer nada o ya hemos terminado dormimos al dispositivo
   delay(1000);
-  esp_sleep_enable_timer_wakeup(FE_uS_S * T_dormido);
+  esp_sleep_enable_timer_wakeup(SLEEP_TIME*uS_S);
   Serial.println("Inicio del sueño profundo");
-  Serial.println("El sistema se dormirá " + String(T_dormido) + " segundos");
+  Serial.println("El sistema se dormirá " + String(SLEEP_TIME) + " segundos");
   Serial.println("----------------------------------------------------------");
 
   // Expulsamos todo de los canales seriales y empezamos el sueño profundo
@@ -153,35 +145,6 @@ void conecta_MQTT() {
 }
 */
 
-// Función que nos permite detectar presencia humana 
-bool detecta_personas() {
-  // tiempo de ejecución actual en milisegundos
-  unsigned long T_Inicio = millis();
-  // Consideramos que hemos detectado a una persona si tenemos su distancia y orientación
-  bool distancia_medida = false;
-  bool direccion_medida = false;
-  // Contamos el tiempo y si llegamos al límite o detectamos a alguien terminamos
-  while (millis() - T_Inicio < T_deteccion*FE_mS_S && !(distancia_medida && direccion_medida)) { 
-    // Activamos el modo de detección de personas
-    radar.HumanExis_Func();
-    // Serial.println(radar.sensor_report);
-    // Medimos orientaciom
-    if(radar.sensor_report == DIREVAL) {
-      direccion[0] = radar.Dir_x;
-      direccion[2] = radar.Dir_y;
-      direccion[3] = radar.Dir_z;
-      direccion_medida = true;
-    }
-    // Medimos distancia
-    else if (radar.sensor_report == DISVAL) {
-      distancia = radar.distance;
-      distancia_medida = true;
-    }
-  }
-  return distancia_medida && direccion_medida;
-}
-
-
 long ultimoMsg = 0;
 // Avisa de que se ha detectado a una persona y le envía un 
 // JSON con sus datos de posición y distancia. Después espera a 
@@ -198,64 +161,6 @@ bool aviso_persona_detectada() {
   client.publish("/cmaESP32/test", "Hola, soy el ESP");
   */
   return true;
-}
-
-/*
-* Medimos las variables de interés en un intervalo
-* Las variables se envían al robot/servidor de forma asíncrona
-*/
-void mide_pulso_respiracion() {
-  
-  // Tiempo en el que empezamos a medir;
-  unsigned long T_inicio = millis();
-  unsigned long T_muestra = millis();
-
-  volatile float sum_HEART_RATE = 0;
-  volatile float sum_BREATH_RATE = 0;
-  volatile int HR_points = 0;
-  volatile int BR_points = 0;
-  
-  // Si seguimos en el tiempo en el que podemos medir
-  while (millis() - T_inicio < T_medida*FE_mS_S) {
-    // Cada muestra dura como máximo 3s:
-    if (millis() - T_muestra < 3*FE_mS_S) {
-      radar.Breath_Heart();
-      if(radar.sensor_report != 0x00){
-        // Si se da un caso de fuera de los rangos lo ignoro, 
-        // aunque se podría mandar un aviso o algo
-        switch(radar.sensor_report){
-            case HEARTRATEVAL:
-              sum_HEART_RATE += radar.heart_rate;
-              HR_points++;
-              break;
-            case BREATHVAL:
-              sum_BREATH_RATE += radar.breath_rate;
-              BR_points++;
-              break;
-        }
-      }
-    } 
-    else {
-      // Si se diese el caso de no medir alguna de las dos, evitamos dividir entre 0
-      HR_points = (HR_points == 0) ? 1 : HR_points;
-      BR_points = (BR_points == 0) ? 1 : BR_points;
-
-      // mandamos las medidas por el canal serial
-      Serial.print("t: ");
-      Serial.println(T_inicio-T_muestra);
-      Serial.print("HR: ");
-      Serial.println(sum_HEART_RATE/(float)HR_points);
-      Serial.print("BR: ");
-      Serial.println(sum_BREATH_RATE/(float)BR_points);
-      // reseteamos todo:
-      sum_HEART_RATE = 0;
-      sum_BREATH_RATE = 0;
-      HR_points = 0;
-      BR_points = 0;
-      T_muestra = millis(); 
-    }
-    delay(200); // evitamos atascos
-  }
 }
 
 void loop() {

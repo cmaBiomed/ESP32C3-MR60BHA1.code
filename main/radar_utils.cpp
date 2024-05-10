@@ -12,7 +12,6 @@
 * This is an stimation and can fail in some scenarios. 
 * Also, the direction measure is not very reliable
 */
-
 bool person_detec() {
     unsigned long Start_Time = millis();
     bool measured_distance = false;
@@ -26,9 +25,9 @@ bool person_detec() {
                     measured_distance = true;
                     break;
                 case DIREVAL:
-                    direcction[0] = radar.Dir_x;
-                    direcction[1] = radar.Dir_y;
-                    direcction[2] = radar.Dir_z;
+                    direction[0] = radar.Dir_x;
+                    direction[1] = radar.Dir_y;
+                    direction[2] = radar.Dir_z;
                     measured_direction = true;
                     break;
                 default:
@@ -41,10 +40,13 @@ bool person_detec() {
 }
 
 /*
-* Medimos las variables de interés en un intervalo
-* Las variables se envían al robot/servidor de forma asíncrona
+* @brief Function that for a determined time scans the vital sings (heart and breath rate) forma a person.
+* The sensor reports this informatin in 5 reports during 3 secons, so we take a mean of the values reported
+* during this 3 seconds and record the time so that we can have a relation between time and measures.
+* @todo find a way to store the measures so that i dont have to print them on the serial monitor and can add
+* them to a json file.
 */
-void mide_pulso_respiracion() {
+void vital_sings_measure() {
     unsigned long start_time = millis();
     unsigned long sample_time = millis();
     volatile float sum_HEART_RATE = 0;
@@ -71,7 +73,10 @@ void mide_pulso_respiracion() {
             // check if 0 so that i dont get an error when calculating the mean.
             heart_rate_points = (heart_rate_points == 0) ? 1 : breath_rate_points;
             breath_rate_points = (breath_rate_points == 0) ? 1 : heart_rate_points;
-            // This is temporal, while i figure out how to store the valueas untill i send them
+
+
+            // This is temporal, while i figure out how to store the valueas untill i send them. 
+            // i am goig mad with pointerless c++ help
             Serial.print("t: ");
             Serial.println((start_time-sample_time)/mS_S);
             Serial.print("HR: ");
