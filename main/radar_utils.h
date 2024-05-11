@@ -24,8 +24,8 @@
 #define mS_S 1000    // Mili seconds to seconds
 
 // Positional values from the detected person
-float person_direction [3];
-float person_distance;
+volatile float person_direction [3];
+volatile float person_distance;
 
 void sensor_init();
 bool person_detec();

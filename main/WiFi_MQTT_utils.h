@@ -9,6 +9,8 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 
+#define network_attempt_time 100000 // in miliseconds
+
 // WiFi
 const char *ssid = "clarc1";
 const char *password = "robotclarc1";
@@ -17,9 +19,6 @@ const char *password = "robotclarc1";
 const char* mqtt_server = "192.168.0.164";
 const int mqtt_port = 1122;
 const char* mqtt_client_name = "cmaESP";
-
-WiFiClient espClient; 
-PubSubClient client(espClient);
 
 void WiFi_config();
 void MQTT_config();

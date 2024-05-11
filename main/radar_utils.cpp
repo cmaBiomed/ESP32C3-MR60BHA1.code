@@ -18,7 +18,9 @@ BreathHeart_60GHz radar = BreathHeart_60GHz(&Sensor_Serial);
 */
 void sensor_init() {
     Sensor_Serial.begin(115200, SERIAL_8N1, RX, TX);
-    while(!Sensor_Serial);
+    while(!Sensor_Serial) {
+        delay(200);
+    }
 }
 
 /*
@@ -31,7 +33,7 @@ bool person_detec() {
     unsigned long Start_Time = millis();
     bool measured_distance = false;
     bool measured_direction = false;
-    while (millis() - Start_Time < DETECTION_TIME*mS_S  && !(measured_distance && measured_direction)) { 
+    while (millis() - Start_Time < (unsigned long) DETECTION_TIME*mS_S  && !(measured_distance && measured_direction)) { 
         radar.HumanExis_Func();
         if (radar.sensor_report != 0x00) {
             switch (radar.sensor_report) {
@@ -64,12 +66,12 @@ bool person_detec() {
 void vital_sings_measure() {
     unsigned long start_time = millis();
     unsigned long sample_time = millis();
-    volatile float sum_HEART_RATE = 0;
-    volatile float sum_BREATH_RATE = 0;
-    volatile int heart_rate_points = 0;
-    volatile int breath_rate_points = 0;
-    while (millis() - start_time < MEASURE_TIME*mS_S ) {
-        if (millis() - sample_time < 3*mS_S) {
+    float sum_HEART_RATE = 0;
+    float sum_BREATH_RATE = 0;
+    int heart_rate_points = 0;
+    int breath_rate_points = 0;
+    while (millis() - start_time < (unsigned long) MEASURE_TIME*mS_S) {
+        if (millis() - sample_time < (unsigned long) 3*mS_S) {
             radar.Breath_Heart();
             if(radar.sensor_report != 0x00){
                 switch(radar.sensor_report) {
