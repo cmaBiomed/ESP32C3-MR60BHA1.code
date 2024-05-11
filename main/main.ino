@@ -10,20 +10,8 @@
 #include <esp_sleep.h>
 #include <ArduinoJson.h>
 #include <ArduinoJson.hpp>
-#include <WiFi.h>
-#include <PubSubClient.h>
 
 RTC_DATA_ATTR int bootCount = 0;
-
-const char *ssid = "clarc1";
-const char *password = "robotclarc1";
-
-const char* mqtt_server = "192.168.0.164";
-const int mqtt_port = 1122;
-const char* MQTT_CLIENT_NAME = "cmaESP";
-
-WiFiClient espClient; 
-PubSubClient client(espClient);
 
 void setup() {
   // Conexión con el monitor serial
@@ -34,16 +22,9 @@ void setup() {
   // Conexión con el sensor
   sensor_init();
   Serial.println("Sensor Conectado");
-
   // Configuración del WiFi: 
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.println("Concetándonos a la red WiFi");
-  }
-  Serial.println("WiFi Conectado");
-
-
+  WiFi_config();
+  Serial.println("Wifi Conectado");
   // Configuración de MQTT
   /*
   Serial.println("Conectando con el Broker MQTT");

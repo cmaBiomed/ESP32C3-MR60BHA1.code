@@ -3,16 +3,18 @@
 @date 2024/05/10
 */
 
-#include "Arduino.h"
 #include "radar_utils.h"
-#include "60ghzbreathheart.h"
-#include <HardwareSerial.h>
-
-HardwareSerial Sensor_Serial(1);
-BreathHeart_60GHz radar = BreathHeart_60GHz(&Sensor_Serial);
 /*
 float person_direction [3];
 float person_distance;
+*/
+
+// initalization of the UART conection and the sensor
+HardwareSerial Sensor_Serial(1);
+BreathHeart_60GHz radar = BreathHeart_60GHz(&Sensor_Serial);
+
+/*
+* @brief Start of the UART conection asigned to the sensor
 */
 void sensor_init() {
     Sensor_Serial.begin(115200, SERIAL_8N1, RX, TX);
@@ -23,8 +25,7 @@ void sensor_init() {
 * @brief Function that determines wether a person is located within the vacinity of the sensor.
 * It uses the distance and direcction functionalities of the sensor, where we determine that if the sensor
 * reports both  of those values during the stablished time, then we can say that a person has been detected. 
-* This is an stimation and can fail in some scenarios. 
-* Also, the direction measure is not very reliable.
+* This is an estimation and can fail in some scenarios. 
 */
 bool person_detec() {
     unsigned long Start_Time = millis();
@@ -55,10 +56,10 @@ bool person_detec() {
 
 /*
 * @brief Function that for a determined time scans the vital sings (heart and breath rate) forma a person.
-* The sensor reports this informatin in 5 reports during 3 secons, so we take a mean of the values reported
+* The sensor gives this information in 5 reports during 3 seconds, so we take a mean of the values reported
 * during this 3 seconds and record the time so that we can have a relation between time and measures.
-* @todo find a way to store the measures so that i dont have to print them on the serial monitor and can add
-* them to a json file.
+* @todo find a way to store the measures so that they dont have to be printed on the serial monitor, istead
+* they are added to a json file that is the payload sent trough mqtt.
 */
 void vital_sings_measure() {
     unsigned long start_time = millis();

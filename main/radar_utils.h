@@ -6,6 +6,10 @@
 #ifndef _RADAR_UTILS_H__
 #define _RADAR_UTILS_H__
 
+#include "Arduino.h"
+#include "60ghzbreathheart.h"
+#include <HardwareSerial.h>
+
 // UART conection with the sensor
 #define RX 18
 #define TX 19
@@ -19,8 +23,9 @@
 #define uS_S 1000000 // Micro seconds to seconds
 #define mS_S 1000    // Mili seconds to seconds
 
-extern float person_direction [3];
-extern float person_distance;
+// Positional values from the detected person
+float person_direction [3];
+float person_distance;
 
 void sensor_init();
 bool person_detec();
