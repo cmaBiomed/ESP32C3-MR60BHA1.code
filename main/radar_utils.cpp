@@ -10,10 +10,10 @@
 
 HardwareSerial Sensor_Serial(1);
 BreathHeart_60GHz radar = BreathHeart_60GHz(&Sensor_Serial);
-
+/*
 float person_direction [3];
 float person_distance;
-
+*/
 void sensor_init() {
     Sensor_Serial.begin(115200, SERIAL_8N1, RX, TX);
     while(!Sensor_Serial);
@@ -87,8 +87,6 @@ void vital_sings_measure() {
             // check if 0 so that i dont get an error when calculating the mean.
             heart_rate_points = (heart_rate_points == 0) ? 1 : breath_rate_points;
             breath_rate_points = (breath_rate_points == 0) ? 1 : heart_rate_points;
-
-
             // This is temporal, while i figure out how to store the valueas untill i send them. 
             // i am goig mad with pointerless c++ help
             Serial.print("t: ");
@@ -107,4 +105,3 @@ void vital_sings_measure() {
     }
     delay(200);
 }
-

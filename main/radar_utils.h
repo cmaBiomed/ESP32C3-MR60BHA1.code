@@ -3,11 +3,11 @@
 @date 2024/05/10
 */
 
-#ifndef _RADARUTILS_H__
-#define _RADARUTILS_H__
+#ifndef _RADAR_UTILS_H__
+#define _RADAR_UTILS_H__
 
 // UART conection with the sensor
-#define RX 18 
+#define RX 18
 #define TX 19
 
 // Times for different things (in seconds)
