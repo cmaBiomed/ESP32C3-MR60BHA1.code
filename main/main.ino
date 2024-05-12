@@ -6,7 +6,6 @@
 // #include "Arduino.h"
 #include "radar_utils.h"
 #include "WiFi_MQTT_utils.h"
-
 #include <esp_sleep.h>
 #include <ArduinoJson.h>
 #include <ArduinoJson.hpp>
@@ -93,14 +92,13 @@ void setup() {
 }
 
 /*
-String content = "";
 void OnMqttReceived(char* topic, byte* payload, unsigned int length) 
 {
   Serial.print("Received on ");
   Serial.print(topic);
   Serial.print(": ");
 
-  content = "";  
+  String content = "";  
   for (size_t i = 0; i < length; i++) {
     content.concat((char)payload[i]);
   }

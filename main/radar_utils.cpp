@@ -4,10 +4,12 @@
 */
 
 #include "radar_utils.h"
-/*
-float person_direction [3];
-float person_distance;
-*/
+#include "Arduino.h"
+#include "60ghzbreathheart.h"
+#include <HardwareSerial.h>
+
+volatile float person_direction [3];
+volatile float person_distance;
 
 // initalization of the UART conection and the sensor
 HardwareSerial Sensor_Serial(1);
@@ -17,7 +19,7 @@ BreathHeart_60GHz radar = BreathHeart_60GHz(&Sensor_Serial);
 * @brief Start of the UART conection asigned to the sensor
 */
 void sensor_init() {
-    Sensor_Serial.begin(115200, SERIAL_8N1, RX, TX);
+    Sensor_Serial.begin(115200, SERIAL_8N1, Rx, Tx);
     while(!Sensor_Serial) {
         delay(200);
     }
@@ -26,7 +28,7 @@ void sensor_init() {
 /*
 * @brief Function that determines wether a person is located within the vacinity of the sensor.
 * It uses the distance and direcction functionalities of the sensor, where we determine that if the sensor
-* reports both  of those values during the stablished time, then we can say that a person has been detected. 
+* reports both of those values during the stablished time, then we can say that a person has been detected. 
 * This is an estimation and can fail in some scenarios. 
 */
 bool person_detec() {
@@ -91,7 +93,6 @@ void vital_sings_measure() {
             heart_rate_points = (heart_rate_points == 0) ? 1 : breath_rate_points;
             breath_rate_points = (breath_rate_points == 0) ? 1 : heart_rate_points;
             // This is temporal, while i figure out how to store the valueas untill i send them. 
-            // i am goig mad with pointerless c++ help
             Serial.print("t: ");
             Serial.println((float)(millis()-start_time)/1000);
             Serial.print("HR: ");
