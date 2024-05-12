@@ -92,39 +92,6 @@ void setup() {
   esp_deep_sleep_start();
 }
 
-/*
-void OnMqttReceived(char* topic, byte* payload, unsigned int length) 
-{
-  Serial.print("Received on ");
-  Serial.print(topic);
-  Serial.print(": ");
-
-  String content = "";  
-  for (size_t i = 0; i < length; i++) {
-    content.concat((char)payload[i]);
-  }
-  Serial.print(content);
-  Serial.println();
-}
-*/
-
-
-// Conecta el cliente con el servidor MQTT
-/*
-void conecta_MQTT() {
-  Serial.println("Intentando reconectar con el servidor MQTT");
-  String client_id = "esp8266-client-";
-  client_id += String(WiFi.macAddress());
-  if (client.connect(client_id.c_str())) {
-    Serial.println("Conextados al servidor MQTT");
-  }
-  else {
-    Serial.print("Conexión fallida, Código: ");
-    Serial.println(client.state());
-  }
-}
-*/
-
 bool aviso_persona_detectada() {
   return true;
 }

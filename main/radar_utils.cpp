@@ -36,7 +36,7 @@ void sensor_init() {
 * Function that determines wether a person is located within the vacinity of the sensor.
 * It uses the distance and direcction functionalities of the sensor, where we determine that if the sensor
 * reports both of those values during the stablished time, then we can say that a person has been detected. 
-* This is an estimation and can fail in some scenarios. 
+* This is an estimation and can fail in some scenarios.
 */
 bool person_detec() {
     unsigned long Start_Time = millis();
@@ -60,9 +60,9 @@ bool person_detec() {
                     break;
             }
         }
-        delay(200);
     }
-  return measured_distance && measured_direction;
+    radar.reset_func();
+    return measured_distance && measured_direction;
 }
 
 /*
@@ -114,7 +114,7 @@ void vital_sings_measure() {
             sample_time = millis(); 
         }
     }
-    delay(200);
+  radar.reset_func();
 }
 
 #endif /*_RADAR_UTILS__*/
