@@ -19,7 +19,7 @@
 #define uS_S 1000000 // Micro seconds to seconds
 #define mS_S 1000    // Mili seconds to seconds
 
-// Positional values from the detected person
+// Positional values from the detected person. Termporally here, the idea is to return the jsopn file instead
 extern volatile float person_direction [3];
 extern volatile float person_distance;
 
@@ -27,4 +27,4 @@ void sensor_init();
 bool person_detec();
 void vital_sings_measure();
 
-#endif
+#endif /*_RADAR_UTILS_H__*/

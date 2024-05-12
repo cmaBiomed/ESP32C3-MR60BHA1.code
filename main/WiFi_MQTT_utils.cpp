@@ -3,6 +3,9 @@
 @date 2024/05/11
 */
 
+#ifndef _WIFI_MQTT_UTILS__
+#define _WIFI_MQTT_UTILS__
+
 #include "WiFi_MQTT_utils.h"
 #include <WiFi.h>
 #include <PubSubClient.h>
@@ -40,3 +43,5 @@ PubSubClient client(espClient);
 void MQTT_config() {
     
 }
+
+#endif /*_WIFI_MQTT_UTILS__*/

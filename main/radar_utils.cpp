@@ -1,7 +1,14 @@
 /*
 @author Carlos Madrid Espinosa
 @date 2024/05/10
+@brief Colection of different utilities I have developed to control the MR60BHA1 sensor from seed studio.
+* It contains functionalities like initializing the sensors UART conection, detecting people and obtaining
+* their position values, reading a persons heart and breath rate over an specified time and functions that 
+* packs all this information into .JSON files. 
 */
+
+#ifndef _RADAR_UTILS__
+#define _RADAR_UTILS__
 
 #include "radar_utils.h"
 #include "Arduino.h"
@@ -16,7 +23,7 @@ HardwareSerial Sensor_Serial(1);
 BreathHeart_60GHz radar = BreathHeart_60GHz(&Sensor_Serial);
 
 /*
-* @brief Start of the UART conection asigned to the sensor
+* Start of the UART conection asigned to the sensor
 */
 void sensor_init() {
     Sensor_Serial.begin(115200, SERIAL_8N1, Rx, Tx);
@@ -26,7 +33,7 @@ void sensor_init() {
 }
 
 /*
-* @brief Function that determines wether a person is located within the vacinity of the sensor.
+* Function that determines wether a person is located within the vacinity of the sensor.
 * It uses the distance and direcction functionalities of the sensor, where we determine that if the sensor
 * reports both of those values during the stablished time, then we can say that a person has been detected. 
 * This is an estimation and can fail in some scenarios. 
@@ -59,7 +66,7 @@ bool person_detec() {
 }
 
 /*
-* @brief Function that for a determined time scans the vital sings (heart and breath rate) forma a person.
+* Function that for a determined time scans the vital sings (heart and breath rate) forma a person.
 * The sensor gives this information in 5 reports during 3 seconds, so we take a mean of the values reported
 * during this 3 seconds and record the time so that we can have a relation between time and measures.
 * @todo find a way to store the measures so that they dont have to be printed on the serial monitor, istead
@@ -109,3 +116,5 @@ void vital_sings_measure() {
     }
     delay(200);
 }
+
+#endif /*_RADAR_UTILS__*/
