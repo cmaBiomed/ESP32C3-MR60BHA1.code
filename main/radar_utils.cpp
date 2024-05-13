@@ -14,13 +14,17 @@
 #include "Arduino.h"
 #include "60ghzbreathheart.h"
 #include <HardwareSerial.h>
-
-volatile float person_direction [3];
-volatile float person_distance;
+#include <ArduinoJson.h>
+// #include <ArduinoJson.hpp>
 
 // initalization of the UART conection and the sensor
 HardwareSerial Sensor_Serial(1);
 BreathHeart_60GHz radar = BreathHeart_60GHz(&Sensor_Serial);
+
+recorded_vital_sings* vitals_array = nullptr;
+size_t data_size = 0;
+const size_t INITIAL_CAPACITY = 10;
+const size_t MAX_CAPACITY = 100;
 
 /*
 * Start of the UART conection asigned to the sensor
@@ -31,6 +35,9 @@ void sensor_init() {
         delay(200);
     }
 }
+
+float person_direction[3]; 
+float person_distance;
 
 /*
 * Function that determines wether a person is located within the vacinity of the sensor.
@@ -79,8 +86,9 @@ void vital_sings_measure() {
     float sum_BREATH_RATE = 0;
     int heart_rate_points = 0;
     int breath_rate_points = 0;
+    allocate_vital_sings_array();
     while (millis() - start_time < (unsigned long) MEASURE_TIME*mS_S) {
-        if (millis() - sample_time < (unsigned long) 3*mS_S) {
+        if (millis() - sample_time < (unsigned long) SAMPLE_TIME*mS_S) {
             radar.Breath_Heart();
             if(radar.sensor_report != 0x00){
                 switch(radar.sensor_report) {
@@ -97,15 +105,10 @@ void vital_sings_measure() {
         } 
         else {
             // check if 0 so that i dont get an error when calculating the mean.
-            heart_rate_points = (heart_rate_points == 0) ? 1 : breath_rate_points;
-            breath_rate_points = (breath_rate_points == 0) ? 1 : heart_rate_points;
-            // This is temporal, while i figure out how to store the valueas untill i send them. 
-            Serial.print("t: ");
-            Serial.println((float)(millis()-start_time)/1000);
-            Serial.print("HR: ");
-            Serial.println(sum_HEART_RATE/(float)heart_rate_points);
-            Serial.print("BR: ");
-            Serial.println(sum_BREATH_RATE/(float)breath_rate_points);
+            heart_rate_points = (heart_rate_points == 0) ? 1 : heart_rate_points;
+            breath_rate_points = (breath_rate_points == 0) ? 1 : breath_rate_points;
+            // We add the recorded values to the vitals array
+            add_vitals_measure((float)(millis()-start_time)/1000, sum_HEART_RATE/(float)heart_rate_points, sum_BREATH_RATE/(float)breath_rate_points);
             // rest all values
             sum_HEART_RATE = 0;
             sum_BREATH_RATE = 0;
@@ -114,7 +117,35 @@ void vital_sings_measure() {
             sample_time = millis(); 
         }
     }
-  radar.reset_func();
+    radar.reset_func();
 }
+
+
+
+// Initializes the vital sings array allocating the initial memory required.
+void allocate_vital_sings_array() {
+    vitals_array = (recorded_vital_sings*)malloc(INITIAL_CAPACITY * sizeof(recorded_vital_sings));
+    if (vitals_array == nullptr) return;
+}
+
+/*
+* Add new values to the recorded vital sings array
+* @param float:sample_time  Time at wich the values were recorded
+* @param float:recorded_heart_rate  The mean recorded heart rate
+* @param float:recorded_breath_rate  The mean recorded breath rate
+*/
+void add_vitals_measure(float sample_time, float recorded_heart_rate, float recorded_breath_rate) {
+    if (data_size >= MAX_CAPACITY) return;
+    if (data_size % INITIAL_CAPACITY == 0) {
+        vitals_array = (recorded_vital_sings*)realloc(vitals_array, (data_size + INITIAL_CAPACITY) * sizeof(recorded_vital_sings));
+        if (vitals_array == nullptr) return;
+    }
+    vitals_array[data_size].smaple_time = sample_time;
+    vitals_array[data_size].mean_sample_heart_rate = recorded_heart_rate;
+    vitals_array[data_size].mean_sample_breath_rate = recorded_breath_rate;
+    data_size++;
+}
+
+// @todo JSON things
 
 #endif /*_RADAR_UTILS__*/

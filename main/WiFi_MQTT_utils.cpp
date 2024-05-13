@@ -14,12 +14,13 @@
 #include <PubSubClient.h>
 
 // WiFi
+/*
 const char *ssid = "Cma";                  // Your networks SSID
 const char *password = "bosquimano";       // The password to the network
-/*
+*/
 const char *ssid = "clarc1";                // Your networks SSID
 const char *password = "robotclarc1";       // The password to the network
-*/
+
 
 // MQTT
 const char* mqtt_server  = "192.168.0.164"; // IP address (or url) of the MQTT broker
