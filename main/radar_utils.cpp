@@ -21,35 +21,26 @@
 HardwareSerial Sensor_Serial(1);
 BreathHeart_60GHz radar = BreathHeart_60GHz(&Sensor_Serial);
 
-float person_direction [3]; 
-float person_distance;
-
-// Storage struct used to record the reported vital sings
-struct recorded_vital_sings {
-    float sample_time;
-    float mean_sample_heart_rate;
-    float mean_sample_breath_rate;
-};
+// float person_direction [3];
+float person_distance = 0;
 
 // Utilities for allocating and realocating memory used to store the reported vital sings
 recorded_vital_sings* vitals_array = nullptr;
 size_t data_size = 0;
 const size_t INITIAL_CAPACITY = 10;
-const size_t MAX_CAPACITY = 100;
-
-/*
-* Stablishes the comunication mode.
-* @param int:mode  0: serial; 1: MQTT 
-*/
-void set_Comunication_Mode(int mode) {
-    USE_MQTT = (mode == 1); 
-} 
+const size_t MAX_CAPACITY = 100; 
 
 /*
 * Start of the UART conection asigned to the sensor
+* @todo fix this
 */
 void sensor_init() {
-    Sensor_Serial.begin(115200, SERIAL_8N1, ESP_RX_SENSOR_TX, ESP_Tx_SENSOR_RX);
+
+    // Remember to change the values here too 
+    gpio_set_direction(GPIO_NUM_20, GPIO_MODE_INPUT);
+    gpio_set_direction(GPIO_NUM_21, GPIO_MODE_OUTPUT);
+
+    Sensor_Serial.begin(115200, SERIAL_8N1, ESP_RX_SENSOR_TX, ESP_TX_SENSOR_RX);
     while(!Sensor_Serial) {
         delay(200);
     }
@@ -64,8 +55,8 @@ void sensor_init() {
 bool person_detec() {
     unsigned long Start_Time = millis();
     bool measured_distance = false;
-    bool measured_direction = false;
-    while (millis() - Start_Time < (unsigned long) DETECTION_TIME*mS_S  && !(measured_distance && measured_direction)) { 
+     // bool measured_direction = false;
+    while (millis() - Start_Time < (unsigned long) DETECTION_TIME*mS_S  &&  !measured_distance) { // !(measured_distance && measured_direction)) { 
         radar.HumanExis_Func();
         if (radar.sensor_report != 0x00) {
             switch (radar.sensor_report) {
@@ -87,13 +78,7 @@ bool person_detec() {
         }
     }
     radar.reset_func();
-    if (USE_MQTT) {
-        // IDK
-    }
-    Output_serial.println("Person detected at: ");
-    Output_serial.print(person_distance);
-    Output_serial.println("m.");
-    return measured_distance && measured_direction;
+    return measured_distance;  // measured_distance && measured_direction;
 }
 
 /*
@@ -143,24 +128,7 @@ void vital_sings_measure() {
         }
     }
     radar.reset_func();
-    if (USE_MQTT) {
-        // IDK
-    }
-    print_vitals();
     free(vitals_array);
-}
-
-void print_vitals() {
-    Output_serial.println("t \t | \t Hr \t , \t Br \t");
-    Output_serial.println("---------------------"); 
-    for(int i = 0; i<data_size-1; i++) {
-        Output_serial.print(vitals_array[i].sample_time);
-        Output_serial.print(" \t | \t ");
-        Output_serial.print(vitals_array[i].mean_sample_breath_rate);
-        Output_serial.print(" \t , \t ");
-        Output_serial.print(vitals_array[i].mean_sample_breath_rate);
-        Output_serial.println(" \t");
-    }
 }
 
 /* 
@@ -192,12 +160,6 @@ void add_vitals_measure(float sample_time, float recorded_heart_rate, float reco
     vitals_array[data_size].mean_sample_breath_rate = recorded_breath_rate;
     data_size++;
 }
-
-// @todo Seria coms things
-
-/*
-* We start the UART port used to send the values to the outside
-*/
 
 // @todo JSON things
 

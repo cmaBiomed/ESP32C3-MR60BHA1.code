@@ -13,7 +13,7 @@
 
 // UART conection with the sensor
 #define ESP_RX_SENSOR_TX 20 // Pin conected to the sensors Tx pin
-#define ESP_Tx_SENSOR_RX 21 // Pin conected to the sensors Rx pin
+#define ESP_TX_SENSOR_RX 21 // Pin conected to the sensors Rx pin
 
 // Times for different things (in seconds)
 #define SLEEP_TIME      10   // Seconds that the system will sleep
@@ -25,19 +25,25 @@
 #define uS_S 1000000 // Micro seconds to seconds
 #define mS_S 1000    // Mili seconds to seconds
 
-// Cominication mode selection check
-extern bool USE_MQTT;
+// Distance to the detected person
+extern float person_distance;
 
-// Serial port for external comunication (OUT_XX pins)
-HardwareSerial Output_serial(0);
+// Storage struct used to record the reported vital sings
+struct recorded_vital_sings {
+    float sample_time;
+    float mean_sample_heart_rate;
+    float mean_sample_breath_rate;
+};
 
-void set_Comunication_Mode(int mode);
+// array (pointer to a struct) that contains the recorded vital sings 
+extern recorded_vital_sings* vitals_array;
+// amount of samples contained in the vitals array
+extern size_t data_size;
+
 void sensor_init();
 bool person_detec();
 void vital_sings_measure();
-
-/* the main.ino file shouldn't use these functions 
 void allocate_vital_sings_array();
 void add_vitals_measure(float sample_time, float recorded_heart_rate, float recorded_breath_rate);
-*/
+
 #endif /*_RADAR_UTILS_H__*/
