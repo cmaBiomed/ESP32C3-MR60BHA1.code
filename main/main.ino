@@ -10,8 +10,8 @@
 #include <esp_sleep.h>
 
 // UART conection with the UART-USB bridge
-#define OUT_RX 4 // RX pin for serial comunication
-#define OUT_TX 5 // TX pin for serial cominication
+#define OUT_RX 6 // RX pin for serial comunication
+#define OUT_TX 7 // TX pin for serial cominication
 
 // Serial port for external comunication (OUT_XX pins)
 HardwareSerial Output_serial(0);
@@ -39,7 +39,13 @@ void setup() {
     Output_serial.println("m");
     Output_serial.println("----------------"); 
     Output_serial.println("Reading vital sings.");
-    print_vitals(vital_sings_measure());
+    recorded_vital_sings *vitals =  vital_sings_measure();
+    if (vitals != nullptr) {
+      print_vitals(vitals);
+    }
+    else {
+      Output_serial.println("The system run out of memory unexpectedly");
+    }
   }
   else {
     Output_serial.println("No person was detected or detection time run out");
