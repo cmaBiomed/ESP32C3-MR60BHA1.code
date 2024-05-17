@@ -33,18 +33,12 @@ void sensor_init() {
 * time, then we can say that a person has been detected. This is an estimation and can fail in some scenarios.
 */
 float person_detec() {
-    float person_distance;
+    float person_distance = 0.0f;
     unsigned long Start_Time = millis();
-    bool measured_distance = false;
     while (millis() - Start_Time < (unsigned long) DETECTION_TIME*mS_S) {  
         radar.HumanExis_Func();
-        switch (radar.sensor_report) {
-            case DISVAL:
-                measured_distance = person_distance > 0.4f; // the efective range starts at 0.4m
-                person_distance = radar.distance;
-                break;
-            default:
-                break;
+        if (radar.sensor_report ==  DISVAL && radar.distance > 0.4f) {
+            person_distance = radar.distance;
         }
     }
     radar.reset_func();
@@ -53,7 +47,8 @@ float person_detec() {
 
 static const size_t INITIAL_CAPACITY = 10; // Amount of samples that can be stored initially
 static const size_t MAX_CAPACITY = 100;    // Mximun amount of samples
-size_t data_size = 0;                      // amount of recorded data
+
+size_t data_size = 0;
 
 /*
 * Function that for a determined time scans a persons's vital sings (heart and breath rate). The sensor gives 
@@ -62,46 +57,42 @@ size_t data_size = 0;                      // amount of recorded data
 * This information is stored in an storage struct, and returned as an array. 
 */
 recorded_vital_sings *vital_sings_measure() {
+    
     recorded_vital_sings *vitals_array = (recorded_vital_sings*)malloc(INITIAL_CAPACITY * sizeof(recorded_vital_sings));
-    unsigned long start_time = millis();
-    unsigned long sample_time = millis();
-    float sum_HEART_RATE = 0;
-    float sum_BREATH_RATE = 0;
-    int heart_rate_points = 0;
-    int breath_rate_points = 0;
-    while (millis() - start_time < (unsigned long) MEASURE_TIME*mS_S) {
-        if (millis() - sample_time < (unsigned long) SAMPLE_TIME*mS_S) {
-            radar.Breath_Heart();
-            if(radar.sensor_report != 0x00){
-                switch(radar.sensor_report) {
-                    case HEARTRATEVAL:
-                        sum_HEART_RATE += radar.heart_rate;
-                        heart_rate_points++;
-                        break;
-                    case BREATHVAL:
-                        sum_BREATH_RATE += radar.breath_rate;
-                        breath_rate_points++;
-                        break;
-                    default:
-                        break;  
-                } 
-            } 
-        }
-        else {
-            // check if 0 so that i it doesn't get an error when calculating the mean.
-            heart_rate_points = (heart_rate_points == 0) ? 1 : heart_rate_points;
-            breath_rate_points = (breath_rate_points == 0) ? 1 : breath_rate_points;
-            // We add the recorded values to the vitals array
-            if (data_size >= MAX_CAPACITY) return vitals_array;
-            if (data_size % INITIAL_CAPACITY == 0) {
-                vitals_array = (recorded_vital_sings*)realloc(vitals_array, (data_size + INITIAL_CAPACITY) * sizeof(recorded_vital_sings));
-            }
+    unsigned long start_time = millis(), sample_time = millis();
+    float sum_HEART_RATE = 0, sum_BREATH_RATE = 0;
+    int heart_rate_points = 0, breath_rate_points = 0;
+
+    while (millis() - start_time < (unsigned long) MEASURE_TIME*mS_S && data_size < MAX_CAPACITY) {
+        radar.Breath_Heart();
+        switch(radar.sensor_report) {
+            case HEARTRATEVAL:
+                sum_HEART_RATE += radar.heart_rate;
+                heart_rate_points++;
+                break;
+            case BREATHVAL:
+                sum_BREATH_RATE += radar.breath_rate;
+                breath_rate_points++;
+                break;
+            default:
+                break;  
+        } 
+        if (millis() - sample_time > (unsigned long) SAMPLE_TIME*mS_S) {
+            vitals_array = (data_size % INITIAL_CAPACITY == 0) ?
+            (recorded_vital_sings*)realloc(vitals_array, (
+                (MAX_CAPACITY-data_size >= INITIAL_CAPACITY) ?
+                    data_size + INITIAL_CAPACITY 
+                    : MAX_CAPACITY-data_size
+                ) * sizeof(recorded_vital_sings)) 
+            : vitals_array;
             if (vitals_array != nullptr) {
+                heart_rate_points = (heart_rate_points == 0) ? 1 : heart_rate_points;
+                breath_rate_points = (breath_rate_points == 0) ? 1 : breath_rate_points;
                 vitals_array[data_size].sample_time = (float)(millis()-start_time)/1000;
                 vitals_array[data_size].mean_sample_heart_rate = sum_HEART_RATE/(float)heart_rate_points;
                 vitals_array[data_size].mean_sample_breath_rate = sum_BREATH_RATE/(float)breath_rate_points;
                 data_size++;
-            }
+            } else data_size = MAX_CAPACITY; // if we get a null pointer we shouldn't keep readig values
             // rest all values
             sum_HEART_RATE = 0;
             sum_BREATH_RATE = 0;

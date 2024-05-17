@@ -15,17 +15,17 @@
 
 // WiFi
 /*
-const char *ssid = "Cma";                  // Your networks SSID
-const char *password = "bosquimano";       // The password to the network
+const char *ssid = "Cma";
+const char *password = "bosquimano";
 */
-const char *ssid = "clarc1";                // Your networks SSID
-const char *password = "robotclarc1";       // The password to the network
-
+const char *ssid = "clarc1";
+const char *password = "robotclarc1";
 
 // MQTT
-const char* mqtt_server  = "192.168.0.164"; // IP address (or url) of the MQTT broker
-const int mqtt_port = 1122;                 // Listener port of the MQTT broker
-const char* mqtt_client_name = "cmaESP";    // Username of this device
+const char* mqtt_server  = "192.168.0.164";
+const int mqtt_port = 1122;
+const char* mqtt_client_name = "cmaESP";
+const char* mqtt_client_passw = "pasword";  
 
 /*
 * WiFi configuration. It tries the defined ssid and password until 
@@ -41,7 +41,7 @@ void WiFi_config() {
   }
 }
 
-// initialization of the MQTT client
+// Initialization of the MQTT client
 WiFiClient espClient; 
 PubSubClient client(espClient);
 
