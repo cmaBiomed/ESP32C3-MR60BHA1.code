@@ -11,7 +11,6 @@
 #define _RADAR_UTILS__
 
 #include "radar_utils.h"
-#include "driver/uart.h"
 
 // Initalization of the UART conection and the sensor
 HardwareSerial Sensor_Serial(1);
@@ -21,22 +20,6 @@ BreathHeart_60GHz radar = BreathHeart_60GHz(&Sensor_Serial);
 * Start of the UART conection asigned to the sensor
 * @todo fix this
 */
-
-/*
-void sensor_init() {
-    uart_config_t uart_config = {
-        .baud_rate = UART_BAUD_RATE,
-        .data_bits = UART_DATA_8_BITS,
-        .parity = UART_PARITY_DISABLE,
-        .stop_bits = UART_STOP_BITS_1,
-        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE
-    };
-    uart_driver_install(UART_NUM_0, 256, 0, 0, NULL, 0);
-    uart_set_pin(UART_NUM_1, ESP_TX_SENSOR_RX, ESP_RX_SENSOR_TX, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
-    uart_param_config(UART_NUM_1, &uart_config);
-}
-*/
-
 void sensor_init() {
     Sensor_Serial.begin(115200, SERIAL_8N1, ESP_RX_SENSOR_TX, ESP_TX_SENSOR_RX);
     while(!Sensor_Serial) {
@@ -50,20 +33,18 @@ void sensor_init() {
 * time, then we can say that a person has been detected. This is an estimation and can fail in some scenarios.
 */
 float person_detec() {
-    float person_distance = 0.0f;
+    float person_distance;
     unsigned long Start_Time = millis();
     bool measured_distance = false;
     while (millis() - Start_Time < (unsigned long) DETECTION_TIME*mS_S) {  
         radar.HumanExis_Func();
-        if (radar.sensor_report != 0x00) {
-            switch (radar.sensor_report) {
-                case DISVAL:
-                    person_distance = radar.distance;
-                    measured_distance = person_distance > 0.4f; // the efective range starts at 0.4m
-                    break;
-                default:
-                    break;
-            }
+        switch (radar.sensor_report) {
+            case DISVAL:
+                measured_distance = person_distance > 0.4f; // the efective range starts at 0.4m
+                person_distance = radar.distance;
+                break;
+            default:
+                break;
         }
     }
     radar.reset_func();
