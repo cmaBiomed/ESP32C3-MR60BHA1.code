@@ -107,6 +107,4 @@ recorded_vital_sings *vital_sings_measure() {
     return vitals_array;
 }
 
-// @todo JSON things
-
 #endif /*_RADAR_UTILS__*/
