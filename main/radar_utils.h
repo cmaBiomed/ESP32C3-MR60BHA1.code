@@ -9,12 +9,11 @@
 #include "Arduino.h"
 #include "60ghzbreathheart.h"
 #include <HardwareSerial.h>
-#include <ArduinoJson.h>
 // #include <ArduinoJson.hpp> // i dont know if I should include the Json Methods in this file
 
 // UART conection with the sensor
 #define ESP_RX_SENSOR_TX 4 // Pin conected to the sensors Tx pin
-#define ESP_TX_SENSOR_RX GPIO_NUM_21 // Pin conected to the sensors Rx pin
+#define ESP_TX_SENSOR_RX 5 // Pin conected to the sensors Rx pin
 #define UART_BAUD_RATE 115200        // Baud rate for the sensor's UART conection
 
 // Times for different things (in seconds)
@@ -37,7 +36,7 @@ struct recorded_vital_sings {
 extern size_t data_size;            // Aumount of samples stored
 
 void sensor_init();
-float person_detec();
+float person_detect();
 recorded_vital_sings *vital_sings_measure();
 
 #endif /*_RADAR_UTILS_H__*/

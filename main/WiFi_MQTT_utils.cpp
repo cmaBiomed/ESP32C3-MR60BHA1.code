@@ -10,8 +10,6 @@
 #define _WIFI_MQTT_UTILS__
 
 #include "WiFi_MQTT_utils.h"
-#include <WiFi.h>
-#include <PubSubClient.h>
 
 // WiFi
 /*
@@ -22,8 +20,10 @@ const char *ssid = "clarc1";
 const char *password = "robotclarc1";
 
 // MQTT
-const char* mqtt_server  = "192.168.0.164";
-const int mqtt_port = 1122;
+IPAddress mqtt_server(192,168,0,117);
+const int mqtt_port = 1883;
+
+// Client credentials _Optional_
 const char* mqtt_client_name = "cmaESP";
 const char* mqtt_client_passw = "pasword";  
 
@@ -45,11 +45,58 @@ void WiFi_config() {
 WiFiClient espClient; 
 PubSubClient client(espClient);
 
+bool person_identified = false;
+
 /*
 * Configuration for the MQTT client.
 */
-void MQTT_config() {
-    
+bool MQTT_config() {
+  client.setServer(mqtt_server, mqtt_port);
+  while (!client.connected()) {
+    String clientId = "ESP8266Client-";
+    clientId += String(random(0xffff), HEX);    
+    client.connect(clientId.c_str());
+    client.loop();
+  }
+  client.setCallback(MQTT_callback);
+  //client.subscribe("person/identified");
+  return client.connected();
+}
+
+bool MQTT_wait_for_response() {
+  client.loop();
+  return person_identified;
+}
+
+/*
+* Call back for this system, it recives information from the topics that 
+* the client is subscribed to. In this case "person/identified". It requires
+* the program calling client.loop() to be invoqued
+*/
+void MQTT_callback(char* topic, byte* payload, unsigned int length) {
+  if (topic == (char*)"person/identified") {
+    String data = "";
+    for(uint i = 0; i < length; i++)
+    {
+      data += (char)payload[i];
+    }
+    person_identified = (data == "Y");
+  }
+}
+
+
+/*
+* We take the recorded distance as input and publish it to the topic "person/distance"
+*/
+void MQTT_publish_distance(float person_distance) {
+  constexpr size_t BUFFER_SIZE = 7;
+  char buffer[BUFFER_SIZE]; 
+  dtostrf(person_distance, BUFFER_SIZE - 1, 2, buffer);
+  StaticJsonDocument<32> doc;
+  doc["distance"] = person_distance;
+  char output[55];
+  serializeJson(doc, output);
+  client.publish("person/distance", output);
 }
 
 #endif /*_WIFI_MQTT_UTILS__*/

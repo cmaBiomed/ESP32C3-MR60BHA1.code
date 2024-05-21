@@ -6,21 +6,19 @@
 #ifndef _WIFI_MQTT_UTILS_H__
 #define _WIFI_MQTT_UTILS_H__
 
-// WiFi
-extern const char *ssid; // Your networks SSID
-const char *password;    // The password to the network
+#include <WiFi.h>
+#include <PubSubClient.h>
+#include <ArduinoJson.h>
+#include <ArduinoJson.hpp>
 
-// MQTT server addresing
-const IPAddress mqtt_server; // IP address (or url) of the MQTT broker
-const int mqtt_port;         // Listener port of the MQTT broker
+#define network_attempt_time 10000 // in miliseconds
 
-// MQTT Client credentials
-const char* mqtt_client_name;  // Username of this device
-const char* mqtt_client_passw; // Password of this device
-
-#define network_attempt_time 100000 // in miliseconds
+extern bool person_identified;
 
 void WiFi_config();
-void MQTT_config();
+bool MQTT_config();
+bool MQTT_wait_for_response();
+void MQTT_callback(char* topic, byte* payload, unsigned int length);
+void MQTT_publish_distance(float person_distance);
 
 #endif /*_WIFI_MQTT_UTILS_H__*/

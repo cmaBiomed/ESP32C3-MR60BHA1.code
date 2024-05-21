@@ -32,13 +32,15 @@ void sensor_init() {
 * functionalitie of the sensor, where we determine that if the sensor reports a distance during the stablished 
 * time, then we can say that a person has been detected. This is an estimation and can fail in some scenarios.
 */
-float person_detec() {
+float person_detect() {
     float person_distance = 0.0f;
     unsigned long Start_Time = millis();
-    while (millis() - Start_Time < (unsigned long) DETECTION_TIME*mS_S) {  
+    bool measured_distance = false;
+    while (millis() - Start_Time < (unsigned long) DETECTION_TIME*mS_S && !measured_distance) {  
         radar.HumanExis_Func();
         if (radar.sensor_report ==  DISVAL && radar.distance > 0.4f) {
             person_distance = radar.distance;
+            measured_distance = true;
         }
     }
     radar.reset_func();
