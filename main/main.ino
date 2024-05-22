@@ -28,11 +28,11 @@ void setup() {
     if (MQTT_config()) {
       // Output_serial.println("MQTT server found and subscribed to the especified topics.");
       // Output_serial.println("Searching for people.");
-      float person_distance = person_detect();
+      positional_values pos_values = person_detect();
       // Output_serial.print("Person detected at: ");
       // Output_serial.print(person_distance);
       // Output_serial.println("m.");
-      MQTT_publish_distance(person_distance);
+      MQTT_publish_distance(pos_values);
       // Output_serial.println("Distance published");
       if ( 1 == 1 /* MQTT_wait_for_response() */) {
         // Output_serial.println("Person confirmed to be identified."); 

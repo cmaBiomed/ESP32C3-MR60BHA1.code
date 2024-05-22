@@ -3,8 +3,7 @@
 @date 2024/05/10
 @brief Colection of different utilities I have developed to control the MR60BHA1 sensor from seed studio.
 * It contains functionalities like initializing the sensors UART conection, detecting people and obtaining
-* their position values, reading a persons heart and breath rate over an specified time and functions that 
-* packs all this information into .JSON files. 
+* their position values and reading a persons heart and breath rate over an specified time.
 */
 
 #ifndef _RADAR_UTILS__
@@ -32,23 +31,24 @@ void sensor_init() {
 * functionalitie of the sensor, where we determine that if the sensor reports a distance during the stablished 
 * time, then we can say that a person has been detected. This is an estimation and can fail in some scenarios.
 */
-float person_detect() {
-    float person_distance = 0.0f;
+positional_values person_detect() {
+    positional_values values = {0.0f, -1.0f}; 
     unsigned long Start_Time = millis();
     bool measured_distance = false;
     while (millis() - Start_Time < (unsigned long) DETECTION_TIME*mS_S && !measured_distance) {  
         radar.HumanExis_Func();
         if (radar.sensor_report ==  DISVAL && radar.distance > 0.4f) {
-            person_distance = radar.distance;
+            values.distance = radar.distance;
+            values.time_stamp = (millis() - Start_Time)/(unsigned int)mS_S;
             measured_distance = true;
         }
     }
     radar.reset_func();
-    return person_distance;
+    return values;
 }
 
 static const size_t INITIAL_CAPACITY = 10; // Amount of samples that can be stored initially
-static const size_t MAX_CAPACITY = 100;    // Mximun amount of samples
+static const size_t MAX_CAPACITY = 100;    // Maximun amount of samples
 
 size_t data_size = 0;
 
