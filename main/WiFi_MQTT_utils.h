@@ -20,7 +20,7 @@ bool WiFi_config();
 bool MQTT_config();
 bool MQTT_wait_for_response();
 void MQTT_callback(char* topic, byte* payload, unsigned int length);
-void MQTT_publish_distance(positional_values person_distance);
-void MQTT_publish_vitals(recorded_vital_sings* vitals);
+String MQTT_publish_distance(positional_values person_distance);
+String MQTT_publish_vitals(recorded_vital_sings* vitals);
 
 #endif /*_WIFI_MQTT_UTILS_H__*/

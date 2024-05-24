@@ -17,9 +17,9 @@
 #define UART_BAUD_RATE 115200        // Baud rate for the sensor's UART conection
 
 // Times for different things (in seconds)
-#define SLEEP_TIME      10   // Seconds that the system will sleep
+#define SLEEP_TIME      1    // Seconds that the system will sleep
 #define MEASURE_TIME    20   // Maximun time (in seconds) for masuring heart rate and breath rate
-#define SAMPLE_TIME     3    // Maximun time (in seconds) for taking a sample of heart rate and breath rate
+#define SAMPLE_TIME     2    // Maximun time (in seconds) for taking a sample of heart rate and breath rate
 #define DETECTION_TIME  10   // Maximun time (in seconds) for searching people in the person detection mode
 
 // Scale factors
@@ -43,6 +43,6 @@ extern size_t data_size;            // Aumount of samples stored
 
 void sensor_init();
 positional_values person_detect();
-recorded_vital_sings *vital_sings_measure();
+recorded_vital_sings* vital_sings_measure();
 
 #endif /*_RADAR_UTILS_H__*/

@@ -60,7 +60,7 @@ bool MQTT_config() {
     client.loop();
   }
   client.setCallback(MQTT_callback);
-  client.subscribe("person/identified");
+  // client.subscribe("person/identified");
   return client.connected();
 }
 
@@ -103,13 +103,14 @@ void MQTT_callback(char* topic, byte* payload, unsigned int length) {
 * We create a static json document that holds the positional values recorded with their time stamp
 @param positional_values:values  The struct that we use to store the recorded positional values obtained 
 */
-void MQTT_publish_distance(positional_values values) {
+String MQTT_publish_distance(positional_values values) {
   StaticJsonDocument<32> doc;
-  doc["distance"] = values.distance;
   doc["time_stamp"] = values.time_stamp;
+  doc["distance"] = values.distance;
   char output[55];
   serializeJson(doc, output);
   client.publish("person/distance", output);
+  return output;
 }
 
 /*
@@ -118,19 +119,19 @@ void MQTT_publish_distance(positional_values values) {
 @param recorded_vital_sings*:vitals  Pointer to the array of vital sings that we have recorded from 
 * the detected person 
 */
-void MQTT_publish_vitals(recorded_vital_sings* vitals) {
-  DynamicJsonDocument doc(1024); 
-  JsonArray vitals_json_array = doc.createNestedArray("vitals");
+String MQTT_publish_vitals(recorded_vital_sings* vitals) {
+  StaticJsonDocument<1024> doc;
   for (size_t i = 0; i < data_size; i++) {
-    JsonObject measure = vitals_json_array.createNestedObject();
-    measure["time"] = vitals[i].sample_time;
-    measure["heart_rate"] = vitals[i].mean_sample_heart_rate;
-    measure["breath_rate"] = vitals[i].mean_sample_breath_rate;
+    String sample_id = "Sample "+String(i);
+    JsonArray sample_array = doc.createNestedArray(sample_id);
+    sample_array.add(vitals[i].sample_time);
+    sample_array.add(vitals[i].mean_sample_heart_rate);
+    sample_array.add(vitals[i].mean_sample_breath_rate);
   }
   String output;
   serializeJson(doc, output);
   client.publish("person/vitals", output.c_str());
+  return output;
 }
-
 
 #endif /*_WIFI_MQTT_UTILS__*/

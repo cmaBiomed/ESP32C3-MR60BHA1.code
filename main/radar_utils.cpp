@@ -39,7 +39,7 @@ positional_values person_detect() {
         radar.HumanExis_Func();
         if (radar.sensor_report ==  DISVAL && radar.distance > 0.4f) {
             values.distance = radar.distance;
-            values.time_stamp = (millis() - Start_Time)/(unsigned int)mS_S;
+            values.time_stamp = (millis())/(unsigned int)mS_S;
             measured_distance = true;
         }
     }
@@ -90,9 +90,9 @@ recorded_vital_sings *vital_sings_measure() {
             if (vitals_array != nullptr) {
                 heart_rate_points = (heart_rate_points == 0) ? 1 : heart_rate_points;
                 breath_rate_points = (breath_rate_points == 0) ? 1 : breath_rate_points;
-                vitals_array[data_size].sample_time = (float)(millis()-start_time)/1000;
-                vitals_array[data_size].mean_sample_heart_rate = sum_HEART_RATE/(float)heart_rate_points;
-                vitals_array[data_size].mean_sample_breath_rate = sum_BREATH_RATE/(float)breath_rate_points;
+                vitals_array[data_size].sample_time = (float)millis()/1000;
+                vitals_array[data_size].mean_sample_heart_rate = (float)sum_HEART_RATE/heart_rate_points;
+                vitals_array[data_size].mean_sample_breath_rate = (float)sum_BREATH_RATE/breath_rate_points;
                 data_size++;
             } else data_size = MAX_CAPACITY; // if we get a null pointer we shouldn't keep readig values
             // rest all values
