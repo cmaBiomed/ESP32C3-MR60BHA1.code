@@ -6,8 +6,10 @@
 #ifndef _RADAR_UTILS_H__
 #define _RADAR_UTILS_H__
 
+extern bool person_detected;
+
 void sensor_init();
 const char * person_detect();
-const char * vital_sings_measure()
+const char * vital_sings_measure();
 
 #endif /*_RADAR_UTILS_H__*/

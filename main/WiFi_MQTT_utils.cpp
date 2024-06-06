@@ -13,16 +13,16 @@
 #define network_attempt_time 10000 // in miliseconds
 
 // WiFi
-const char* ssid = "clarc1";
-const char* password = "robotclarc1";
+const char * ssid = "clarc1";
+const char * password = "robotclarc1";
 
 // MQTT
 IPAddress mqtt_server(192,168,0,117); // Could also use the servers URL
 const int mqtt_port = 1883;
 
 // Client credentials
-const char* mqtt_client_name = "cmaESP";
-const char* mqtt_client_passw = "pasword"; // if on allow anonymous mode, the pasword is optional
+const char * mqtt_client_name = "cmaESP";
+const char * mqtt_client_passw = "pasword"; // if on allow anonymous mode, the pasword is optional
 
 // Initialization of the MQTT client
 WiFiClient espClient; 
@@ -61,7 +61,7 @@ bool MQTT_config() {
     client.loop();
   }
   client.setCallback(MQTT_callback);
-  client.subscribe("person/identified");
+  client.subscribe("cma/person/identified");
   return client.connected();
 }
 
@@ -73,8 +73,8 @@ bool MQTT_config() {
  * @param byte*:payload        The information asociated to that topic
  * @param unsigned_int:length   Length of the payload  
 */
-void MQTT_callback(char* topic, byte* payload, unsigned int length) {
-  if (topic == "person/identified") {
+void MQTT_callback(char * topic, byte * payload, unsigned int length) {
+  if (topic == "cma/person/identified") {
     String data = "";
     for(uint i = 0; i < length; i++)
     {
@@ -89,6 +89,6 @@ void MQTT_callback(char* topic, byte* payload, unsigned int length) {
  * @param char*:topic             topic where we want to publish something
  * @param char*:serialized_JSON   the JSON file being published
 */
-void MQTT_publish_JSON(char * topic, char * serialized_JSON) {
+void MQTT_publish_JSON(char * topic, const char * serialized_JSON) {
   client.publish(topic, serialized_JSON);
 }

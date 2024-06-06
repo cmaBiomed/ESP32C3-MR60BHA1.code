@@ -19,18 +19,19 @@
 #define UART_BAUD_RATE 115200   // Baud rate for the sensor's UART conection
 
 // Times for different things (in seconds)
-#define SLEEP_TIME      1    // Seconds that the system will sleep
 #define MEASURE_TIME    20   // Maximun time (in seconds) for masuring heart rate and breath rate
 #define SAMPLE_TIME     2    // Maximun time (in seconds) for taking a sample of heart rate and breath rate
 #define DETECTION_TIME  10   // Maximun time (in seconds) for searching people in the person detection mode
 
-// Scale factors
-#define uS_S 1000000 // Micro seconds to seconds
+// Scale factor
 #define mS_S 1000    // Mili seconds to seconds
 
 // Initalization of the UART conection and the sensor
 HardwareSerial Sensor_Serial(1);
 BreathHeart_60GHz radar = BreathHeart_60GHz(&Sensor_Serial);
+
+// Check wether a person has been detected
+bool person_detected = false;
 
 /**
  * Start of the UART conection asigned to the sensor
@@ -44,7 +45,7 @@ void sensor_init() {
 
 /**
  * We determine that a person has been detected when we get a distance report from the sensor repot. 
- * In that case we recort that distance and the time it was recorded at, add them to a JSON file, 
+ * In that case we record that distance and the time it was recorded at, add them to a JSON file, 
  * serialize it and retun it.
 */
 const char * person_detect() {
@@ -52,15 +53,16 @@ const char * person_detect() {
     unsigned int Start_Time = millis();
     bool measured_distance = false;
     detect_doc["Distance"] = -1.0f;
-    detect_doc["Timestamp"] = millis();
+    detect_doc["Timestamp"] = (float) millis();
     while (millis() - Start_Time < (unsigned long) DETECTION_TIME*mS_S && !measured_distance) {  
         radar.HumanExis_Func();
         if (radar.sensor_report == DISVAL && radar.distance > 0.4f) {
             detect_doc["Distance"] = radar.distance;
-            detect_doc["Timestamp"] = (millis())/(unsigned int)mS_S;
+            detect_doc["Timestamp"] = millis();
             measured_distance = true;
         }
     }
+    person_detected = measured_distance;
     radar.reset_func();
     String serialized_detect;
     serializeJson(detect_doc, serialized_detect);
@@ -68,7 +70,9 @@ const char * person_detect() {
 }
 
 /**
- * 
+ * We read the heart and breath rate of a person over an spcecified time. We read the values over a 
+ * specified sample time, and average them to reduce the possible variations. Then we add the saple 
+ * mean to a json file as a json array. Finally we serialize the complete file and return it.
 */
 const char * vital_sings_measure() {
     DynamicJsonDocument vitals_doc(32);
@@ -80,30 +84,31 @@ const char * vital_sings_measure() {
         switch(radar.sensor_report) {
             case HEARTRATEVAL:
                 heart_rate_points++;
-                mean_HEART_RATE += (mean_HEART_RATE*(heart_rate_points-1)+radar.heart_rate)/heart_rate_points;
+                mean_HEART_RATE = (mean_HEART_RATE*(heart_rate_points-1)+radar.heart_rate)/heart_rate_points;
                 break;
             case BREATHVAL:
                 breath_rate_points++;
-                mean_BREATH_RATE += (mean_BREATH_RATE*(breath_rate_points-1)+radar.breath_rate)/breath_rate_points;
+                mean_BREATH_RATE = (mean_BREATH_RATE*(breath_rate_points-1)+radar.breath_rate)/breath_rate_points;
                 break;
             default:
                 break;  
         } 
         if (millis() - sample_time > (unsigned long) SAMPLE_TIME*mS_S) {
-            heart_rate_points = (heart_rate_points == 0) ? 1 : heart_rate_points;
-            breath_rate_points = (breath_rate_points == 0) ? 1 : breath_rate_points;    
-            vitals_array[data_size].sample_time = (float)millis()/1000;
-            vitals_array[data_size].mean_sample_heart_rate = (float)sum_HEART_RATE/heart_rate_points;
-            vitals_array[data_size].mean_sample_breath_rate = (float)sum_BREATH_RATE/breath_rate_points;
+            JsonArray sample_array = vitals_doc.createNestedArray("Sample "+String(data_size)); 
+            sample_array.add((float) millis());
+            sample_array.add(mean_HEART_RATE);
+            sample_array.add(mean_BREATH_RATE);
             data_size++;
-        } // if we get a null pointer we shouldn't keep readig values
-            // rest all values
-        sum_HEART_RATE = 0;
-        sum_BREATH_RATE = 0;
-        heart_rate_points = 0;
-        breath_rate_points = 0;
-        sample_time = millis();
+            mean_HEART_RATE = 0.0f;
+            mean_BREATH_RATE = 0.0f;
+            heart_rate_points = 0;
+            breath_rate_points = 0;
+            sample_time = millis();
+        }
     }
     radar.reset_func();
-    return vitals_array;
+    vitals_doc["DataSize"] = data_size;
+    String serialized_vitals;
+    serializeJson(vitals_doc, serialized_vitals);
+    return serialized_vitals.c_str();
 }
