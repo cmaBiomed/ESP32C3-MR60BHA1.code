@@ -6,14 +6,6 @@
 #ifndef _WIFI_MQTT_UTILS_H__
 #define _WIFI_MQTT_UTILS_H__
 
-#include"radar_utils.h"
-#include <WiFi.h>
-#include <PubSubClient.h>
-#include <ArduinoJson.h>
-#include <ArduinoJson.hpp>
-
-#define network_attempt_time 10000 // in miliseconds
-
 extern bool person_identified;
 
 bool WiFi_config();

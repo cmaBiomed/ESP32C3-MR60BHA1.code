@@ -43,19 +43,21 @@ void sensor_init() {
 }
 
 char * person_detect() {
+    StaticJsonDocument<32> detect_doc;
     unsigned int Start_Time = millis();
     bool measured_distance = false;
-
     while (millis() - Start_Time < (unsigned long) DETECTION_TIME*mS_S && !measured_distance) {  
         radar.HumanExis_Func();
         if (radar.sensor_report ==  DISVAL && radar.distance > 0.4f) {
-            values.distance = radar.distance;
-            values.time_stamp = (millis())/(unsigned int)mS_S;
+            detect_doc["Distance"] = radar.distance;
+            detect_doc["Timestamp"] = (millis())/(unsigned int)mS_S;
             measured_distance = true;
         }
     }
     radar.reset_func();
-    return ;
+    String serialized_detect;
+    serializeJson(detect_doc, serialized_detect);
+    return serialized_detect.c_str();
 }
 
 

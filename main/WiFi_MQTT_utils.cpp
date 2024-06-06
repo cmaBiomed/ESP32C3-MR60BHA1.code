@@ -7,6 +7,10 @@
 */
 
 #include "WiFi_MQTT_utils.h"
+#include <WiFi.h>
+#include <PubSubClient.h>
+
+#define network_attempt_time 10000 // in miliseconds
 
 // WiFi
 const char* ssid = "clarc1";
@@ -24,7 +28,7 @@ const char* mqtt_client_passw = "pasword"; // if on allow anonymous mode, the pa
 WiFiClient espClient; 
 PubSubClient client(espClient);
 
-// Check wether the detected person is identified by the broker
+// Check if the detected person is identified by the broker
 bool person_identified = false;
 
 /**
@@ -85,6 +89,6 @@ void MQTT_callback(char* topic, byte* payload, unsigned int length) {
  * @param char*:topic             topic where we want to publish something
  * @param char*:serialized_JSON   the JSON file being published
 */
-void MQTT_publish_JSON(char * topic, char* serialized_JSON) {
+void MQTT_publish_JSON(char * topic, char * serialized_JSON) {
   client.publish(topic, serialized_JSON);
 }
