@@ -1,6 +1,6 @@
 /**
-* @author Carlos Madrid Espinosa
-* @date 2024/05/11
+ * @author Carlos Madrid Espinosa
+ * @date 2024/05/11
 */
 
 #ifndef _WIFI_MQTT_UTILS_H__

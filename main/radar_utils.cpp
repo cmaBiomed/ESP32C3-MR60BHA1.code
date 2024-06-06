@@ -1,23 +1,39 @@
-/*
-@author Carlos Madrid Espinosa
-@date 2024/05/10
-@brief Colection of different utilities I have developed to control the MR60BHA1 sensor from seed studio.
-* It contains functionalities like initializing the sensors UART conection, detecting people and obtaining
-* their position values and reading a persons heart and breath rate over an specified time.
+/** 
+ * @author Carlos Madrid Espinosa
+ * @date 2024/05/10
+ * @brief Colection of different utilities I have developed to control the MR60BHA1 sensor from seed studio.
+ * It contains functionalities like initializing the sensors UART conection, detecting people and obtaining
+ * their position values and reading a persons heart and breath rate over an specified time.
 */
 
-#ifndef _RADAR_UTILS__
-#define _RADAR_UTILS__
-
 #include "radar_utils.h"
+#include "Arduino.h"
+#include "60ghzbreathheart.h"
+#include <HardwareSerial.h>
+#include <ArduinoJson.h>
+#include <ArduinoJson.hpp>
+
+// UART conection with the sensor
+#define ESP_RX_SENSOR_TX 4 // Pin conected to the sensors Tx pin
+#define ESP_TX_SENSOR_RX 5 // Pin conected to the sensors Rx pin
+#define UART_BAUD_RATE 115200        // Baud rate for the sensor's UART conection
+
+// Times for different things (in seconds)
+#define SLEEP_TIME      1    // Seconds that the system will sleep
+#define MEASURE_TIME    20   // Maximun time (in seconds) for masuring heart rate and breath rate
+#define SAMPLE_TIME     2    // Maximun time (in seconds) for taking a sample of heart rate and breath rate
+#define DETECTION_TIME  10   // Maximun time (in seconds) for searching people in the person detection mode
+
+// Scale factors
+#define uS_S 1000000 // Micro seconds to seconds
+#define mS_S 1000    // Mili seconds to seconds
 
 // Initalization of the UART conection and the sensor
 HardwareSerial Sensor_Serial(1);
 BreathHeart_60GHz radar = BreathHeart_60GHz(&Sensor_Serial);
 
-/*
-* Start of the UART conection asigned to the sensor
-* @todo fix this
+/**
+ * Start of the UART conection asigned to the sensor
 */
 void sensor_init() {
     Sensor_Serial.begin(115200, SERIAL_8N1, ESP_RX_SENSOR_TX, ESP_TX_SENSOR_RX);
@@ -26,15 +42,10 @@ void sensor_init() {
     }
 }
 
-/*
-* Function that determines wether a person is located within the vacinity of the sensor. It uses the distance 
-* functionalitie of the sensor, where we determine that if the sensor reports a distance during the stablished 
-* time, then we can say that a person has been detected. This is an estimation and can fail in some scenarios.
-*/
-positional_values person_detect() {
-    positional_values values = {0.0f, -1.0f}; 
-    unsigned long Start_Time = millis();
+char * person_detect() {
+    unsigned int Start_Time = millis();
     bool measured_distance = false;
+
     while (millis() - Start_Time < (unsigned long) DETECTION_TIME*mS_S && !measured_distance) {  
         radar.HumanExis_Func();
         if (radar.sensor_report ==  DISVAL && radar.distance > 0.4f) {
@@ -44,20 +55,10 @@ positional_values person_detect() {
         }
     }
     radar.reset_func();
-    return values;
+    return ;
 }
 
-static const size_t INITIAL_CAPACITY = 10; // Amount of samples that can be stored initially
-static const size_t MAX_CAPACITY = 100;    // Maximun amount of samples
 
-size_t data_size = 0;
-
-/*
-* Function that for a determined time scans a persons's vital sings (heart and breath rate). The sensor gives 
-* this information in 5 reports during 3 seconds, so we take a mean of the values reported during this 3 seconds
-* (the sample time can be changed) and record the time so that we can have a relation between time and measures.
-* This information is stored in an storage struct, and returned as an array. 
-*/
 recorded_vital_sings *vital_sings_measure() {
     
     recorded_vital_sings *vitals_array = (recorded_vital_sings*)malloc(INITIAL_CAPACITY * sizeof(recorded_vital_sings));
@@ -106,5 +107,3 @@ recorded_vital_sings *vital_sings_measure() {
     radar.reset_func();
     return vitals_array;
 }
-
-#endif /*_RADAR_UTILS__*/

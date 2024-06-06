@@ -37,7 +37,7 @@ bool WiFi_config() {
   WiFi.begin(ssid, password);
   unsigned long start_time = millis();
   while (WiFi.status() != WL_CONNECTED && millis() - start_time < (unsigned long)network_attempt_time) {
-    delay(500);
+    delay(200);
   }
   return WiFi.status() == WL_CONNECTED;
 }
