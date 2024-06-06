@@ -1,6 +1,6 @@
-/*
-@author Carlos Madrid Espinosa
-@date 2024/05/11
+/**
+* @author Carlos Madrid Espinosa
+* @date 2024/05/11
 */
 
 #ifndef _WIFI_MQTT_UTILS_H__
@@ -18,9 +18,7 @@ extern bool person_identified;
 
 bool WiFi_config();
 bool MQTT_config();
-bool MQTT_wait_for_response();
 void MQTT_callback(char* topic, byte* payload, unsigned int length);
-String MQTT_publish_distance(positional_values person_distance);
-String MQTT_publish_vitals(recorded_vital_sings* vitals);
+void MQTT_publish_JSON(char * topic, char* serialized_JSON);
 
 #endif /*_WIFI_MQTT_UTILS_H__*/
