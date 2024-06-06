@@ -9,7 +9,6 @@
 
 #define SLEEP_TIME  1
 #define WAIT_TIME   20
-#define uS_S        1000000 // Micro seconds to seconds
 
 // UART conection with the UART-USB bridge
 #define OUT_RX 6 // RX pin for serial comunication
@@ -52,7 +51,7 @@ void setup() {
   // Output_serial.println("Published positional values");
   // Output_serial.println("Waiting for response");
   unsigned int start_wait_time = millis();
-  while (millis()-start_wait_time && !person_identified);
+  while (millis()-start_wait_time < (unsigned int) WAIT_TIME*mS_S && !person_identified);
   if (person_identified) {
     // Output_serial.println("The prerson detected has been identified");
     // Output_serial.println("Reading vital sings");

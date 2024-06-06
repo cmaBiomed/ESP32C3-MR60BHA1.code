@@ -6,6 +6,10 @@
 #ifndef _RADAR_UTILS_H__
 #define _RADAR_UTILS_H__
 
+// Scale factor
+#define mS_S    1000    // Mili seconds to seconds
+#define uS_S    1000000 // Micro seconds to seconds
+
 extern bool person_detected;
 
 void sensor_init();

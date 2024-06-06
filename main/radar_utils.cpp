@@ -23,8 +23,7 @@
 #define SAMPLE_TIME     2    // Maximun time (in seconds) for taking a sample of heart rate and breath rate
 #define DETECTION_TIME  10   // Maximun time (in seconds) for searching people in the person detection mode
 
-// Scale factor
-#define mS_S 1000    // Mili seconds to seconds
+
 
 // Initalization of the UART conection and the sensor
 HardwareSerial Sensor_Serial(1);
