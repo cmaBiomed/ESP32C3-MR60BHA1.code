@@ -7,11 +7,6 @@
 */
 
 #include "radar_utils.h"
-#include "Arduino.h"
-#include "60ghzbreathheart.h"
-#include <HardwareSerial.h>
-#include <ArduinoJson.h>
-#include <ArduinoJson.hpp>
 
 // UART conection with the sensor
 #define ESP_RX_SENSOR_TX 4      // Pin conected to the sensors Tx pin

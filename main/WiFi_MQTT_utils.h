@@ -6,6 +6,10 @@
 #ifndef _WIFI_MQTT_UTILS_H__
 #define _WIFI_MQTT_UTILS_H__
 
+#include "Arduino.h"
+#include <WiFi.h>
+#include <PubSubClient.h>
+
 extern bool person_identified;
 
 bool WiFi_config();

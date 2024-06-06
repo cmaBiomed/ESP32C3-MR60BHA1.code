@@ -7,8 +7,6 @@
 */
 
 #include "WiFi_MQTT_utils.h"
-#include <WiFi.h>
-#include <PubSubClient.h>
 
 #define network_attempt_time 10000 // in miliseconds
 
@@ -73,7 +71,7 @@ bool MQTT_config() {
  * @param byte*:payload        The information asociated to that topic
  * @param unsigned_int:length   Length of the payload  
 */
-void MQTT_callback(char * topic, byte * payload, unsigned int length) {
+void MQTT_callback(char* topic, byte* payload, unsigned int length) {
   if (topic == "cma/person/identified") {
     String data = "";
     for(uint i = 0; i < length; i++)
