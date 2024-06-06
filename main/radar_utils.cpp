@@ -14,9 +14,9 @@
 #include <ArduinoJson.hpp>
 
 // UART conection with the sensor
-#define ESP_RX_SENSOR_TX 4 // Pin conected to the sensors Tx pin
-#define ESP_TX_SENSOR_RX 5 // Pin conected to the sensors Rx pin
-#define UART_BAUD_RATE 115200        // Baud rate for the sensor's UART conection
+#define ESP_RX_SENSOR_TX 4      // Pin conected to the sensors Tx pin
+#define ESP_TX_SENSOR_RX 5      // Pin conected to the sensors Rx pin
+#define UART_BAUD_RATE 115200   // Baud rate for the sensor's UART conection
 
 // Times for different things (in seconds)
 #define SLEEP_TIME      1    // Seconds that the system will sleep
@@ -42,13 +42,20 @@ void sensor_init() {
     }
 }
 
-char * person_detect() {
+/**
+ * We determine that a person has been detected when we get a distance report from the sensor repot. 
+ * In that case we recort that distance and the time it was recorded at, add them to a JSON file, 
+ * serialize it and retun it.
+*/
+const char * person_detect() {
     StaticJsonDocument<32> detect_doc;
     unsigned int Start_Time = millis();
     bool measured_distance = false;
+    detect_doc["Distance"] = -1.0f;
+    detect_doc["Timestamp"] = millis();
     while (millis() - Start_Time < (unsigned long) DETECTION_TIME*mS_S && !measured_distance) {  
         radar.HumanExis_Func();
-        if (radar.sensor_report ==  DISVAL && radar.distance > 0.4f) {
+        if (radar.sensor_report == DISVAL && radar.distance > 0.4f) {
             detect_doc["Distance"] = radar.distance;
             detect_doc["Timestamp"] = (millis())/(unsigned int)mS_S;
             measured_distance = true;
@@ -60,51 +67,42 @@ char * person_detect() {
     return serialized_detect.c_str();
 }
 
-
-recorded_vital_sings *vital_sings_measure() {
-    
-    recorded_vital_sings *vitals_array = (recorded_vital_sings*)malloc(INITIAL_CAPACITY * sizeof(recorded_vital_sings));
+/**
+ * 
+*/
+const char * vital_sings_measure() {
+    DynamicJsonDocument vitals_doc(32);
     unsigned long start_time = millis(), sample_time = millis();
-    float sum_HEART_RATE = 0, sum_BREATH_RATE = 0;
-    int heart_rate_points = 0, breath_rate_points = 0;
-
-    while (millis() - start_time < (unsigned long) MEASURE_TIME*mS_S && data_size < MAX_CAPACITY) {
+    float mean_HEART_RATE = 0.0f, mean_BREATH_RATE = 0.0f;
+    int heart_rate_points = 0, breath_rate_points = 0, data_size = 0;
+    while (millis() - start_time < (unsigned long) MEASURE_TIME*mS_S) {
         radar.Breath_Heart();
         switch(radar.sensor_report) {
             case HEARTRATEVAL:
-                sum_HEART_RATE += radar.heart_rate;
                 heart_rate_points++;
+                mean_HEART_RATE += (mean_HEART_RATE*(heart_rate_points-1)+radar.heart_rate)/heart_rate_points;
                 break;
             case BREATHVAL:
-                sum_BREATH_RATE += radar.breath_rate;
                 breath_rate_points++;
+                mean_BREATH_RATE += (mean_BREATH_RATE*(breath_rate_points-1)+radar.breath_rate)/breath_rate_points;
                 break;
             default:
                 break;  
         } 
         if (millis() - sample_time > (unsigned long) SAMPLE_TIME*mS_S) {
-            vitals_array = (data_size % INITIAL_CAPACITY == 0) ?
-            (recorded_vital_sings*)realloc(vitals_array, (
-                (MAX_CAPACITY-data_size >= INITIAL_CAPACITY) ?
-                    data_size + INITIAL_CAPACITY 
-                    : MAX_CAPACITY-data_size
-                ) * sizeof(recorded_vital_sings)) 
-            : vitals_array;
-            if (vitals_array != nullptr) {
-                heart_rate_points = (heart_rate_points == 0) ? 1 : heart_rate_points;
-                breath_rate_points = (breath_rate_points == 0) ? 1 : breath_rate_points;
-                vitals_array[data_size].sample_time = (float)millis()/1000;
-                vitals_array[data_size].mean_sample_heart_rate = (float)sum_HEART_RATE/heart_rate_points;
-                vitals_array[data_size].mean_sample_breath_rate = (float)sum_BREATH_RATE/breath_rate_points;
-                data_size++;
-            } else data_size = MAX_CAPACITY; // if we get a null pointer we shouldn't keep readig values
+            heart_rate_points = (heart_rate_points == 0) ? 1 : heart_rate_points;
+            breath_rate_points = (breath_rate_points == 0) ? 1 : breath_rate_points;    
+            vitals_array[data_size].sample_time = (float)millis()/1000;
+            vitals_array[data_size].mean_sample_heart_rate = (float)sum_HEART_RATE/heart_rate_points;
+            vitals_array[data_size].mean_sample_breath_rate = (float)sum_BREATH_RATE/breath_rate_points;
+            data_size++;
+        } // if we get a null pointer we shouldn't keep readig values
             // rest all values
-            sum_HEART_RATE = 0;
-            sum_BREATH_RATE = 0;
-            heart_rate_points = 0;
-            breath_rate_points = 0;
-            sample_time = millis();
-        }
+        sum_HEART_RATE = 0;
+        sum_BREATH_RATE = 0;
+        heart_rate_points = 0;
+        breath_rate_points = 0;
+        sample_time = millis();
     }
     radar.reset_func();
     return vitals_array;

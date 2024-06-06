@@ -7,5 +7,7 @@
 #define _RADAR_UTILS_H__
 
 void sensor_init();
+const char * person_detect();
+const char * vital_sings_measure()
 
 #endif /*_RADAR_UTILS_H__*/
