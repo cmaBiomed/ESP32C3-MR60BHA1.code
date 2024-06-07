@@ -14,11 +14,9 @@
 #define UART_BAUD_RATE 115200   // Baud rate for the sensor's UART conection
 
 // Times for different things (in seconds)
-#define MEASURE_TIME    20   // Maximun time (in seconds) for masuring heart rate and breath rate
-#define SAMPLE_TIME     2    // Maximun time (in seconds) for taking a sample of heart rate and breath rate
+#define MEASURE_TIME    25   // Maximun time (in seconds) for masuring heart rate and breath rate
+#define SAMPLE_TIME     5    // Maximun time (in seconds) for taking a sample of heart rate and breath rate
 #define DETECTION_TIME  10   // Maximun time (in seconds) for searching people in the person detection mode
-
-
 
 // Initalization of the UART conection and the sensor
 HardwareSerial Sensor_Serial(1);

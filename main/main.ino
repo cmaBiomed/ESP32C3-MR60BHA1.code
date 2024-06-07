@@ -15,16 +15,18 @@
 #define OUT_TX 7 // TX pin for serial cominication
 
 // Serial port for external comunication (OUT_XX pins)
-// HardwareSerial Output_serial(0);
+HardwareSerial Output_serial(0);
 
-// RTC_DATA_ATTR int bootCount = 0;
+RTC_DATA_ATTR int bootCount = 0;
 
 void setup() {
   //////////////////////////////////////////////////////////////////
+  // bootCount++;
   /*
   Output_serial.begin(115200, SERIAL_8N1, OUT_RX, OUT_TX);
   while(!Output_serial);
-  Output_serial.println("Comunication ouput channel stablished.");
+  Output_serial.println("Comunication ouput channel stablished");
+  Output_serial.println("Boot Nº: "+String(bootCount));
   */
   sensor_init();
   // Output_serial.println("Sensor conected");
@@ -46,21 +48,29 @@ void setup() {
     go_to_sleep();
   }
   // Output_serial.print("Person detected: ");
-  // Output_serial.println(position_serialized_JSON);
+  Output_serial.println(detected_serialized_JSON);
   MQTT_publish_JSON("cma/person/positional", detected_serialized_JSON);
-  // Output_serial.println("Published positional values");
-  // Output_serial.println("Waiting for response");
+  /*
+  Output_serial.println("Published positional values");
+  Output_serial.println("Waiting for response");
+  */
   unsigned int start_wait_time = millis();
   while (millis()-start_wait_time < (unsigned int) WAIT_TIME*mS_S && !person_identified);
-  if (person_identified) {
-    // Output_serial.println("The prerson detected has been identified");
-    // Output_serial.println("Reading vital sings");
-    const char * vitals_serialized_JSON = vital_sings_measure(); 
-    // Output_serial.print("Vital sings red: ");
-    // Output_serial.println(vitals_serialized_JSON);
-    MQTT_publish_JSON("cma/person/vitals", vitals_serialized_JSON);
-    // Output_serial.println("Published vital sings");
+  if (!person_identified){
+    // Output_serial.println("The detected person was not identified");
+    go_to_sleep();
   }
+  /*
+  Output_serial.println("The prerson detected has been identified");
+  Output_serial.println("Reading vital sings");
+  */
+  const char * vitals_serialized_JSON = vital_sings_measure(); 
+  /*
+  Output_serial.print("Vital sings red: ");
+  Output_serial.println(vitals_serialized_JSON);
+  */
+  MQTT_publish_JSON("cma/person/vitals", vitals_serialized_JSON);
+  // Output_serial.println("Published vital sings");
   go_to_sleep();
 }
 
