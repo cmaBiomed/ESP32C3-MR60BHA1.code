@@ -45,7 +45,7 @@ const char * person_detect() {
     unsigned int Start_Time = millis();
     bool measured_distance = false;
     detect_doc["distance"] = -1.0f;
-    detect_doc["timestamp"] = (float) millis();
+    detect_doc["timestamp"] = millis();
     while (millis() - Start_Time < (unsigned long) DETECTION_TIME*mS_S && !measured_distance) {  
         radar.HumanExis_Func();
         if (radar.sensor_report == DISVAL && radar.distance > 0.4f) {
@@ -87,7 +87,7 @@ const char * vital_sings_measure() {
         } 
         if (millis() - sample_time > (unsigned long) SAMPLE_TIME*mS_S) {
             JsonObject sample_array = vitals_doc.createNestedObject("sample "+String(data_size)); 
-            sample_array["timestamp"] = (float) millis();
+            sample_array["timestamp"] = millis();
             sample_array["heartrate"] = mean_HEART_RATE;
             sample_array["breathrate"] = mean_BREATH_RATE;
             data_size++;
