@@ -42,17 +42,18 @@ void sensor_init() {
 */
 const char * person_detect() {
     StaticJsonDocument<32> detect_doc;
-    unsigned int Start_Time = millis();
     bool measured_distance = false;
     detect_doc["distance"] = -1.0f;
     detect_doc["timestamp"] = millis();
-    while (millis() - Start_Time < (unsigned long) DETECTION_TIME*mS_S && !measured_distance) {  
+    unsigned long start_time = millis();
+    while (millis() - start_time < (unsigned long) DETECTION_TIME*mS_S && !measured_distance) {  
         radar.HumanExis_Func();
         if (radar.sensor_report == DISVAL && radar.distance > 0.4f) {
             detect_doc["distance"] = radar.distance;
             detect_doc["timestamp"] = millis();
             measured_distance = true;
         }
+        delay(100);
     }
     person_detected = measured_distance;
     radar.reset_func();
@@ -68,9 +69,9 @@ const char * person_detect() {
 */
 const char * vital_sings_measure() {
     DynamicJsonDocument vitals_doc(32);
-    unsigned long start_time = millis(), sample_time = millis();
+    unsigned long start_time = millis(), sample_time = millis(),
+        heart_rate_points = 0, breath_rate_points = 0, data_size = 0;
     float mean_HEART_RATE = 0.0f, mean_BREATH_RATE = 0.0f;
-    int heart_rate_points = 0, breath_rate_points = 0, data_size = 0;
     while (millis() - start_time < (unsigned long) MEASURE_TIME*mS_S) {
         radar.Breath_Heart();
         switch(radar.sensor_report) {
@@ -97,6 +98,7 @@ const char * vital_sings_measure() {
             breath_rate_points = 0;
             sample_time = millis();
         }
+        delay(100);
     }
     radar.reset_func();
     vitals_doc["data_size"] = data_size;
