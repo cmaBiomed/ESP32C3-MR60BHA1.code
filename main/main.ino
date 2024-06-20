@@ -7,21 +7,13 @@
 #include "WiFi_MQTT_utils.h"
 #include <esp_sleep.h>
 
-#define SLEEP_TIME  10
-#define WAIT_TIME   20
-
-// UART conection with the UART-USB bridge
-#define OUT_RX 6 // RX pin for serial comunication
-#define OUT_TX 7 // TX pin for serial cominication
-
-// Serial port for external comunication (OUT_XX pins)
-HardwareSerial Output_serial(0);
-
-// RTC_DATA_ATTR int bootCount = 0;
+#define SLEEP_TIME  15
+#define WAIT_TIME   5
 
 bool distance_mode = false;
 
 void setup() {
+
   sensor_init();
   if (!WiFi_config()) {
     go_to_sleep();
@@ -29,19 +21,17 @@ void setup() {
   if (!MQTT_config()) {
     go_to_sleep();
   }
+
   if (!distance_mode) {
     const char * detected_serialized_JSON = person_detect();
     if (!person_detected) {
       go_to_sleep();
     }
-    MQTT_publish_JSON("cma/person/positional", detected_serialized_JSON);
-    unsigned int start_wait_time = millis();
-    while (millis()-start_wait_time < (unsigned int) WAIT_TIME*mS_S && !person_identified);
     if (!person_identified){
       go_to_sleep();
     }
     const char * vitals_serialized_JSON = vital_sings_measure(); 
-    MQTT_publish_JSON("cma/person/vitals", vitals_serialized_JSON);
+    delay(200);
     go_to_sleep();
   }
 }
@@ -53,6 +43,5 @@ void go_to_sleep() {
 
 void loop() {
   const char * detected_serialized_JSON = person_detect();
-  MQTT_publish_JSON("cma/person/positional", detected_serialized_JSON);
-  delay(500);
+  delay(200);
 }

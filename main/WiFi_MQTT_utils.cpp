@@ -27,7 +27,7 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 
 // Check if the detected person is identified by the broker
-bool person_identified =  true;// false;
+bool person_identified = true;// false;
 
 /**
  * WiFi configuration. It tries the defined ssid and password until 
